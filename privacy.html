@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Refract SEO · Privacy policy</title>
+  <link rel="stylesheet" href="docs.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="icons/icon-48.png" alt="" width="40" height="40" class="logo">
+    <h1>Privacy policy</h1>
+    <p>Refract SEO Chrome extension · Effective 14 October 2026 (updated for data sources, Search Console and Bing)</p>
+  </header>
+
+  <p><strong>Short version:</strong> Refract SEO has no account, no server and no analytics. It reads a page only when you open it on that page. Results stay in your browser. A few optional features contact public services, listed below with exactly what each one receives.</p>
+
+  <h2>What Refract SEO reads</h2>
+  <ul>
+    <li><strong>The page you audit</strong>: when you click the toolbar icon (or have the side panel or full-screen view open for a tab), Refract SEO reads that tab's HTML, headings, links, images, meta tags, structured data, performance timings and HTTP response headers. Nothing is read from other tabs.</li>
+    <li><strong>The site's own public files</strong>: <code>robots.txt</code>, <code>llms.txt</code>, sitemaps and, if the page declares one on the same site, its canonical URL. These are fetched from the page itself.</li>
+    <li><strong>Google search results pages</strong>: on <code>google.*/search</code> Refract SEO numbers results and can extract "People also ask" questions. This happens locally in the page; nothing about your searches is sent anywhere. Both can be turned off in Settings.</li>
+  </ul>
+  <p>Refract SEO does not read form inputs, passwords, cookies or browsing history.</p>
+
+  <h2>What Refract SEO stores, and where</h2>
+  <table>
+    <tr><th>Data</th><th>Where</th><th>How long</th></tr>
+    <tr><td>Settings (SERP badges, PAA button, start view)</td><td><code>chrome.storage.sync</code>, which Chrome syncs to your own Google account if you have sync on</td><td>Until you change them or remove Refract SEO</td></tr>
+    <tr><td>Last crawl of each site (URLs, status codes, titles, descriptions, word counts)</td><td><code>chrome.storage.local</code> on this computer</td><td>Replaced by the next crawl of that site; removed with Refract SEO</td></tr>
+    <tr><td>API keys you enter (DataForSEO, Semrush, Ahrefs, Google CrUX, Bing Webmaster) and each connector's last test result</td><td><code>chrome.storage.local</code> on this computer; never synced</td><td>Until you remove them in Settings or remove Refract SEO</td></tr>
+    <tr><td>Google Search Console sign-in</td><td>Chrome's own identity token cache (Refract SEO does not store the token)</td><td>Until you press Disconnect, which also revokes it at Google</td></tr>
+    <tr><td>Page snapshots for History (title, description, canonical, robots, counts, scores, issue list), up to 50 per URL and 300 URLs</td><td><code>chrome.storage.local</code> on this computer</td><td>Oldest dropped automatically; removed with Refract SEO</td></tr>
+    <tr><td>Tracked keywords and rank history; last backlink result per domain</td><td><code>chrome.storage.local</code> on this computer</td><td>Until removed with Refract SEO</td></tr>
+    <tr><td>"View as crawler" setting for a tab</td><td>Browser session memory</td><td>Until you switch back, close the tab or restart Chrome</td></tr>
+  </table>
+  <p>Audit results themselves are not stored; they are recomputed each time you open Refract SEO. Exports (CSV, JSON, HTML report) are saved only where you choose to save them.</p>
+
+  <h2>Network requests Refract SEO makes</h2>
+  <p>Only these, and only when you use the feature:</p>
+  <div class="scroll-x"><table>
+    <tr><th>Feature</th><th>Sent to</th><th>What they receive</th></tr>
+    <tr><td>Domain view (on open)</td><td><code>dns.google</code></td><td>The page's hostname (DNS lookup)</td></tr>
+    <tr><td></td><td><code>rdap.org</code> and the registry it redirects to</td><td>The registered domain (registration data)</td></tr>
+    <tr><td></td><td><code>tranco-list.eu</code></td><td>The registered domain (popularity rank)</td></tr>
+    <tr><td></td><td><code>ipinfo.io</code></td><td>The website server's IP address (location and network). Not your IP address beyond what any web request reveals.</td></tr>
+    <tr><td></td><td><code>archive.org</code></td><td>The registered domain (first Wayback Machine capture)</td></tr>
+    <tr><td>Bot's eye</td><td>The website you are auditing</td><td>Six requests for the current URL with crawler User-Agent strings, <strong>without your cookies</strong></td></tr>
+    <tr><td>Site crawl</td><td>The website you are auditing</td><td>Up to 200 page requests on that site, without your cookies, paced one at a time, obeying its <code>robots.txt</code></td></tr>
+    <tr><td>Alt-text suggestion</td><td>The website you are auditing</td><td>One request for that image file, without your cookies, so the on-device model can look at it</td></tr>
+    <tr><td>Field data (Speed)</td><td><code>chromeuxreport.googleapis.com</code> (Google)</td><td>Your CrUX API key and the page URL and its origin</td></tr>
+    <tr><td>Rankings, keyword data, backlinks (only with your key)</td><td>The provider you chose: <code>api.dataforseo.com</code>, <code>api.semrush.com</code> or <code>api.ahrefs.com</code></td><td>Your key, plus the domain, the keywords you track or the page's top phrases, and your market. Billed to your account by the provider.</td></tr>
+    <tr><td>Search Console</td><td>Google (<code>accounts.google.com</code>, <code>www.googleapis.com</code>, <code>searchconsole.googleapis.com</code>)</td><td>Sign-in through Chrome with Refract SEO's Google OAuth client (read-only scope); then the list of properties you can see, the page URL for its performance data, and, when you press Inspect, the URL for URL Inspection.</td></tr>
+    <tr><td>Bing Webmaster</td><td><code>ssl.bing.com</code></td><td>Your Bing API key and the page URL</td></tr>
+    <tr><td>Redirects &amp; headers</td><td>The URL you enter</td><td>One request per hop, without your cookies</td></tr>
+    <tr><td>Compare, and Crawl with "Render JavaScript"</td><td>The pages you compare or crawl</td><td>Loaded in a background tab <strong>with your normal browser session</strong> (cookies), then closed</td></tr>
+    <tr><td>Chrome AI model download</td><td>Google, via Chrome</td><td>Chrome downloads its built-in model once if you choose to use AI suggestions. This is Chrome's own download, covered by Chrome's privacy policy.</td></tr>
+  </table></div>
+  <p>Links in the Tools view (Semrush, Ahrefs, PageSpeed Insights and others) open those sites in a new tab only when you click them; the page URL is in the link. Their privacy policies apply once you are there.</p>
+
+  <h2>Chrome built-in AI</h2>
+  <p>AI suggestions use Gemini Nano, which runs <strong>on your device</strong>. Page text, headings and image files given to the model never leave your computer and are not sent to Refract SEO or to Google by Refract SEO. Suggestions are checked by Refract SEO before they are shown, and any suggestion that states a number not found on the page is discarded.</p>
+
+  <h2>Permissions and why</h2>
+  <div class="scroll-x"><table>
+    <tr><th>Permission</th><th>Why</th></tr>
+    <tr><td><code>activeTab</code>, <code>scripting</code></td><td>Read the page you clicked Refract SEO on, and draw the optional overlays (nofollow, missing alt, heading labels).</td></tr>
+    <tr><td><code>contextMenus</code></td><td>The right-click menu (open the site in SEO tools, duplicate-content search, highlight nofollow).</td></tr>
+    <tr><td><code>declarativeNetRequestWithHostAccess</code></td><td>Set a crawler User-Agent for "View as crawler" and Bot's eye. Rules are temporary and limited to the URL or tab involved.</td></tr>
+    <tr><td><code>storage</code></td><td>Settings and the last crawl per site, as listed above.</td></tr>
+    <tr><td><code>sidePanel</code></td><td>Open Refract SEO as a side panel for one tab when you ask.</td></tr>
+    <tr><td><code>unlimitedStorage</code></td><td>Crawls of up to 1,000 pages and History snapshots can exceed Chrome's default extension storage.</td></tr>
+    <tr><td><code>webRequest</code> (optional)</td><td>Requested only when you first trace a redirect chain, to read each hop's status and headers of Refract SEO's own request.</td></tr>
+    <tr><td><code>identity</code> (optional)</td><td>Requested only when you connect Search Console, so Chrome can sign you in with Google.</td></tr>
+    <tr><td>Access to all sites (optional)</td><td>Requested only the first time you use View as crawler, Bot's eye, Crawl, Compare or Redirects, because those fetch pages outside the current tab. Data providers are requested per provider, only for their API host, when you save a key. You can decline and every other feature still works.</td></tr>
+    <tr><td>Google search pages</td><td>Position numbers and People Also Ask extraction on results pages.</td></tr>
+  </table></div>
+
+  <h2>What Refract SEO never does</h2>
+  <ul>
+    <li>No analytics, telemetry, tracking pixels or crash reporting.</li>
+    <li>No selling, sharing or transferring of data to third parties beyond the requests listed above.</li>
+    <li>No remote code: everything Refract SEO runs ships inside the extension.</li>
+    <li>No use of data for advertising, credit or lending decisions.</li>
+  </ul>
+
+  <h2>Your control</h2>
+  <p>Remove Refract SEO from <code>chrome://extensions</code> to delete its stored settings and crawl results. You can revoke the optional "all sites" access there too (Details → Site access). Turning off Google results features is in Settings.</p>
+
+  <h2>Changes</h2>
+  <p>If this policy changes, the effective date above changes with it and the new version ships inside the extension.</p>
+
+  <h2>Contact</h2>
+  <p>[Add the publisher's support email before publishing to the Chrome Web Store.]</p>
+</div>
+</body>
+</html>

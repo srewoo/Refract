@@ -1,0 +1,5 @@
+<!-- Refract SEO master (48px and up): a search lens over a result (title line + URL/snippet lines). Teal tile = the extension accent. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><rect x="4" y="4" width="120" height="120" rx="28" fill="#0f6e66"/>
+<circle cx="56" cy="55" r="29" fill="none" stroke="#fbfaf7" stroke-width="10"/>
+<rect x="40" y="42" width="32" height="6" rx="3" fill="#fbfaf7"/><rect x="40" y="53" width="20" height="5" rx="2.5" fill="#fbfaf7" opacity=".75"/><rect x="40" y="63" width="27" height="5" rx="2.5" fill="#fbfaf7" opacity=".75"/>
+<line x1="78" y1="77" x2="100" y2="99" stroke="#fbfaf7" stroke-width="13" stroke-linecap="round"/></svg>

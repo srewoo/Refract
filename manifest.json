@@ -1,0 +1,72 @@
+{
+  "manifest_version": 3,
+  "name": "Refract SEO: SEO & AI-search audit",
+  "short_name": "Refract SEO",
+  "version": "3.1.0",
+  "description": "SEO & AI-search audit: indexability, schema, speed, bot view, 1,000-page crawl, Search Console, rankings and backlinks.",
+  "minimum_chrome_version": "102",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsQ78P5sR7vG3i6DMCdcCzRv+5d620pb+jvFdYshV0gXEYIcWdx60jt+HtgaaDLn8kFmwbm8YdZNv12bsMDSmFScMOyhYsU0U6HNs7kN11CCHOEEc80CgzH2pwjM0yKLdFo9+5CrYbsSqwVASdPU5jWyfWQWAcFNnDmyurvqZRm41zaZ5nv0RCikZxQehwCYLQgG/P4/8uneqG5Sz+Yw5RcWEgsS7rGMf9F7lr6n/gWLPzlv/nXYz+Y2Mzrz3UG+xKP2Q3JteKgNZuytMV3ZrMw29UzvmlnkkDVCiItsHu/R79n+zeKJTXSkUP1kJgmE1NFkMxpihPnIHU+3T74Os4wIDAQAB",
+  "oauth2": {
+    "client_id": "238611989419-ume5a733mcfaur2v9m8hn7vgpmg5g7tf.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/webmasters.readonly"
+    ]
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "contextMenus",
+    "declarativeNetRequestWithHostAccess",
+    "storage",
+    "unlimitedStorage",
+    "sidePanel"
+  ],
+  "optional_permissions": [
+    "webRequest",
+    "identity"
+  ],
+  "optional_host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_title": "Refract SEO",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.google.com/search*",
+        "https://www.google.co.uk/search*",
+        "https://www.google.ca/search*",
+        "https://www.google.com.au/search*",
+        "https://www.google.co.in/search*",
+        "https://www.google.de/search*",
+        "https://www.google.fr/search*",
+        "https://www.google.es/search*",
+        "https://www.google.it/search*",
+        "https://www.google.nl/search*",
+        "https://www.google.com.br/search*",
+        "https://www.google.co.jp/search*"
+      ],
+      "js": [
+        "serp.js",
+        "paa.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

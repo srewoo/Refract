@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Refract SEO · Help</title>
+  <link rel="stylesheet" href="docs.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="icons/icon-48.png" alt="" width="40" height="40" class="logo">
+    <h1>Refract SEO help</h1>
+    <p>On-page SEO and AI-search audit for the page you're on, a 1,000-page site crawl, and your own Search Console, Bing and SEO data sources. <a href="privacy.html">Privacy policy</a></p>
+  </header>
+
+  <nav class="toc" aria-label="Contents"><ol>
+    <li><a href="#start">Getting started</a></li>
+    <li><a href="#surfaces">Popup, side panel, full screen</a></li>
+    <li><a href="#views">What each view tells you</a></li>
+    <li><a href="#crawl">Crawling a site</a></li>
+    <li><a href="#data">Connecting data sources</a></li>
+    <li><a href="#gsc">Search Console &amp; Bing setup</a></li>
+    <li><a href="#ai">Chrome AI suggestions</a></li>
+    <li><a href="#bots">Bot's eye and View as crawler</a></li>
+    <li><a href="#google">On Google results pages</a></li>
+    <li><a href="#menu">Right-click menu</a></li>
+    <li><a href="#scores">How scores are calculated</a></li>
+    <li><a href="#trouble">Troubleshooting</a></li>
+  </ol></nav>
+
+  <h2 id="start">Getting started</h2>
+  <ol>
+    <li>Open any normal web page.</li>
+    <li>Click the Refract SEO icon in the toolbar (pin it from the puzzle-piece menu if you don't see it).</li>
+    <li>Overview opens with the page's health score, what to fix first, and whether Google can index the URL.</li>
+  </ol>
+  <p>The number next to a section in the sidebar is how many things in that section need attention. Use ↑ / ↓ to move through sections with the keyboard.</p>
+
+  <h2 id="surfaces">Popup, side panel, full screen</h2>
+  <dl>
+    <dt>Popup</dt><dd>The quick view. It closes when you click the page.</dd>
+    <dt>Side panel</dt><dd>"Open in side panel" docks Refract SEO next to the page <strong>for that tab only</strong>. Other tabs don't get it. It re-audits automatically when the page navigates.</dd>
+    <dt>Full screen</dt><dd>The <strong>⤢ Full screen</strong> button (top right) opens Refract SEO in its own tab with room for wide tables. <strong>⧉ Pop out</strong> opens it in a separate window you can place beside the site. Both keep auditing the original tab and re-audit when it navigates. Crawling runs here.</dd>
+  </dl>
+
+  <h2 id="views">What each view tells you</h2>
+  <div class="scroll-x"><table>
+    <tr><th>View</th><th>Answers</th></tr>
+    <tr><td>Overview</td><td>Health score; top fixes; the indexability chain (HTTP status → meta robots → X-Robots-Tag → canonical); search snippet preview with length and pixel-width meters; stack; sitemap status; export report.</td></tr>
+    <tr><td>Issues</td><td>Every problem found, worst first, each with a one-line fix and a link to the section that shows the evidence.</td></tr>
+    <tr><td>AI search</td><td>How ready the page is for AI answer engines: which AI crawlers robots.txt blocks, how much text exists before JavaScript runs, <code>llms.txt</code>, structured data and trust signals.</td></tr>
+    <tr><td>Content</td><td>Heading counts and outline (skipped levels highlighted), bold and italic text. "Label headings on page" tags each heading in the page itself.</td></tr>
+    <tr><td>Keywords</td><td>1–5 word phrase density, marked when a phrase also appears in the title (T), description (D) or H1.</td></tr>
+    <tr><td>Links</td><td>Internal vs external, follow vs nofollow/sponsored/UGC, most-linked domains, full list. "Highlight nofollow" marks them on the page.</td></tr>
+    <tr><td>Images</td><td>Alt-text coverage and formats. "Mark on page" outlines images with no alt.</td></tr>
+    <tr><td>Schema</td><td>JSON-LD type tree, required/recommended properties per type, raw blocks, links to Google's Rich Results Test.</td></tr>
+    <tr><td>Social</td><td>Facebook/LinkedIn and X card previews.</td></tr>
+    <tr><td>Hreflang</td><td>Self-reference, x-default, duplicate and invalid codes.</td></tr>
+    <tr><td>Local SEO</td><td>Business name, address and phone from schema, tap-to-call links and page text; whether they agree; LocalBusiness schema completeness; Maps and Business Profile links.</td></tr>
+    <tr><td>Speed</td><td>Lab numbers from this load (LCP, CLS, INP so far, a timeline of where time went) and, with a free CrUX key, <strong>field data</strong>: what real Chrome users experienced over 28 days for this URL and the whole site, phone or desktop, with a 25-week trend.</td></tr>
+    <tr><td>Bot's eye</td><td>What six crawlers actually receive for this URL. See <a href="#bots">below</a>.</td></tr>
+    <tr><td>Redirects &amp; headers</td><td>Any URL, hop by hop: status codes, Location, timing and every response header, as a browser or a crawler. Flags loops, long chains, temporary redirects and missing security headers.</td></tr>
+    <tr><td>Search Console</td><td>Google's own clicks, impressions, CTR, position and top queries for this URL, plus URL Inspection (indexed or not, last crawl, Google's chosen canonical). See <a href="#gsc">setup</a>.</td></tr>
+    <tr><td>Bing Webmaster</td><td>Bing clicks, impressions and position for this URL, the site's top queries and inbound links.</td></tr>
+    <tr><td>Crawl</td><td>Site-wide problems across up to 1,000 pages, optionally with JavaScript rendering, and what changed since the last crawl. See <a href="#crawl">below</a>.</td></tr>
+    <tr><td>Rankings</td><td>Google positions for keywords you track; each check is stored so positions build a history.</td></tr>
+    <tr><td>Backlinks</td><td>Rating, referring domains and backlinks from your provider, with top referring domains.</td></tr>
+    <tr><td>Ads &amp; tags</td><td>AdSense publisher and ad slots, Google Analytics 4, Tag Manager, and other trackers found in the page.</td></tr>
+    <tr><td>Domain</td><td>Tranco popularity rank over time, domain age and expiry, registrar, hosting location, DNS, first Wayback capture.</td></tr>
+    <tr><td>History</td><td>Snapshots saved on each audit; compare any two to see changed fields and issues that appeared or were fixed, with score trends.</td></tr>
+    <tr><td>Compare</td><td>Audit one or two competitor pages and see them side by side, including phrases they use that you don't.</td></tr>
+    <tr><td>Tools</td><td>View as crawler, plus links to search engines, traffic/backlink tools, validators and safety reports for this site.</td></tr>
+    <tr><td>Settings</td><td>Google results features, the view Refract SEO opens on, and Chrome AI status.</td></tr>
+  </table></div>
+
+  <h2 id="crawl">Crawling a site</h2>
+  <p>Open full screen (or the side panel), go to <strong>Crawl</strong> and click <strong>Start crawl</strong>. The first time, Chrome asks for access to all sites so Refract SEO can fetch other pages; you can decline and keep using everything else.</p>
+  <ul>
+    <li><strong>Limits:</strong> up to 1,000 pages and 6 clicks deep, same site only, one request at a time with a short pause. A full 1,000-page crawl takes roughly 10–15 minutes.</li>
+    <li><strong>Render JavaScript</strong> (optional): loads each page in a background tab so React, Vue or Angular content is seen, and lists pages whose text only exists after JavaScript runs. Much slower (3–5 s per page) and it uses your browser session.</li>
+    <li><strong>Changes since last crawl:</strong> new and removed pages, status, indexing and title changes.</li>
+    <li><strong>Polite:</strong> obeys the site's <code>robots.txt</code>, sends no cookies, and stops if the server answers 429 or 503 ("slow down").</li>
+    <li><strong>Findings:</strong> broken internal links (with the page linking to them), duplicate titles and descriptions, missing titles/descriptions/H1, noindex and canonicalised pages, redirecting links, orphan pages, hreflang without return links, thin pages, slow responses and click depth.</li>
+    <li><strong>Partial crawls are labelled.</strong> If the crawl stops at 1,000 pages, Refract SEO says so and does not report orphans, because "nothing links to this page" can't be known until every page has been seen.</li>
+    <li>The last crawl of each site is kept on this computer and shown next time. <strong>Export CSV</strong> downloads every crawled URL.</li>
+  </ul>
+  <p class="note">Keep the full-screen tab open while it runs. Clicking away from a popup would close it and stop the crawl, which is why crawling isn't offered in the popup.</p>
+
+  <h2 id="data">Connecting data sources</h2>
+  <p>Rankings, keyword volume and difficulty, and backlinks come from a provider you already pay for. In <strong>Settings › Connectors</strong>, press <strong>Connect</strong> on the provider, paste its key and press <strong>Save &amp; test</strong>; then choose which provider handles each job, and your market, under Routing. Keys stay on this computer and are sent only to that provider; each provider's API host is requested as a permission when you save its key.</p>
+  <div class="scroll-x"><table>
+    <tr><th>Provider</th><th>Ranks</th><th>Volume &amp; difficulty</th><th>Backlinks</th><th>Notes</th></tr>
+    <tr><td>DataForSEO</td><td>Live Google position for each tracked keyword (top 100)</td><td>Yes</td><td>Yes, with its separate Backlinks subscription (tick the box in Settings)</td><td>Pay-as-you-go</td></tr>
+    <tr><td>Semrush</td><td>From the domain's top 50 ranking keywords</td><td>Yes (up to 25 phrases per request, to save units)</td><td>Yes (Authority Score)</td><td>API units; Business plan or API add-on</td></tr>
+    <tr><td>Ahrefs</td><td>From the domain's top 50 ranking keywords</td><td>Yes</td><td>Yes (Domain Rating)</td><td>API v3 units</td></tr>
+    <tr><td>Google CrUX</td><td colspan="3">Field Core Web Vitals in Speed</td><td>Free API key</td></tr>
+  </table></div>
+  <p>Results that cost credits are only fetched when you press the button; the last backlink result per domain is cached.</p>
+
+  <h2 id="gsc">Search Console &amp; Bing setup</h2>
+  <p>Open <strong>Settings › Connectors</strong> and press <strong>Connect</strong> on Google Search Console. Chrome asks you to choose the Google account signed in to your Chrome profile and to allow read-only Search Console access (<code>webmasters.readonly</code>). Chrome keeps the sign-in; <strong>Disconnect</strong> removes it.</p>
+  <p class="note"><strong>Test user required.</strong> While Refract SEO's Google Cloud app is in Testing, your Google account must be listed as a <strong>Test user</strong> on its OAuth consent screen (Google Cloud Console › APIs &amp; Services › OAuth consent screen › Audience › Test users). If it isn't, Google shows "Access blocked" or "has not completed the Google verification process". Ask the project owner to add you. The account must also have access to the site's property in Search Console.</p>
+  <p>The Search Console section shows the last 28 days for the page (data lags 2–3 days). <strong>Inspect</strong> asks Google whether the URL is indexed; it uses Search Console's daily URL Inspection quota, so it runs only when you press it.</p>
+  <p><strong>Bing:</strong> in Bing Webmaster Tools open Settings › API access, generate a key, then Connect Bing Webmaster Tools in Settings › Connectors.</p>
+
+  <h2 id="ai">Chrome AI suggestions</h2>
+  <p>On computers that support Chrome's built-in model (Gemini Nano), Refract SEO adds buttons that draft fixes:</p>
+  <ul>
+    <li><strong>Suggest titles / descriptions</strong> (Overview): three options, each re-measured for length and pixel width.</li>
+    <li><strong>Suggest alt</strong> (Images): alt text for an image missing it, from the image itself where the device supports image input, otherwise from its file name and nearby text.</li>
+    <li><strong>Draft JSON-LD</strong> (Schema): structured data built only from facts on the page, with any properties it couldn't fill listed.</li>
+    <li><strong>Explain</strong> (Issues): a short, plain explanation of why an issue matters.</li>
+  </ul>
+  <p>Everything runs on your device. The first use downloads Chrome's model once (a few GB); progress shows on the button and in Settings. Any suggestion that states a number not found on the page is discarded, so treat what remains as a draft to review, not a finished answer.</p>
+  <p><strong>Requirements:</strong> a recent desktop Chrome (138 or later) on Windows, macOS, Linux or ChromeOS with enough free storage and memory. If your device doesn't qualify, Settings says why and the buttons are hidden.</p>
+
+  <h2 id="bots">Bot's eye and View as crawler</h2>
+  <dl>
+    <dt>Bot's eye</dt><dd>Fetches the current URL as Googlebot, Bingbot, GPTBot, OAI-SearchBot, ClaudeBot and PerplexityBot, without cookies, and shows whether each was served the page, blocked (403/429/503 or a CDN challenge such as Cloudflare's "Just a moment"), or couldn't be verified. It compares the title and word count with what your browser shows, and with robots.txt, so you can spot a firewall blocking a crawler that robots.txt allows.</dd>
+    <dt>View as crawler (Tools)</dt><dd>Reloads the current tab with a crawler's User-Agent so you can browse the site as that crawler is served it. A yellow banner shows while it's on; "Back to normal" turns it off. It also ends when you close the tab.</dd>
+  </dl>
+  <p class="note">Both change only the User-Agent. Sites that also verify crawlers by IP address may still treat the real crawler differently.</p>
+
+  <h2 id="google">On Google results pages</h2>
+  <ul>
+    <li>Each organic result gets a position number; <strong>Copy results CSV</strong> copies position, title and URL.</li>
+    <li><strong>Extract People Also Ask</strong> opens each question to collect its answer source, follows the questions Google adds, up to three levels deep (100 questions maximum), and exports to CSV.</li>
+  </ul>
+  <p>Both can be turned off in Settings.</p>
+
+  <h2 id="menu">Right-click menu</h2>
+  <p>Right-click any page → <strong>Refract SEO</strong> to open the site in Ahrefs, Semrush, SimilarWeb, Majestic, Moz or the Wayback Machine, run <code>site:</code> searches, highlight nofollow links, or select text and check whether it's duplicated across the web or on the same site.</p>
+
+  <h2 id="scores">How scores are calculated</h2>
+  <dl>
+    <dt>Health</dt><dd>Starts at 100; each "Fix" issue subtracts 12 and each "Check" subtracts 4 (minimum 0). Grades: A ≥ 90, B ≥ 75, C ≥ 50, D below.</dd>
+    <dt>AI search readiness</dt><dd>The average of five pillars (crawler access, machine readability, structured data, content &amp; citability, trust). Each pillar is the share of its checks that pass; every check is listed in the AI search view.</dd>
+  </dl>
+  <p>No score uses estimated or third-party traffic data.</p>
+
+  <h2 id="trouble">Troubleshooting</h2>
+  <dl>
+    <dt>"This page can't be analysed"</dt><dd>Chrome doesn't let extensions read <code>chrome://</code> pages, the Chrome Web Store or the built-in PDF viewer.</dd>
+    <dt>Domain shows "Tranco is rate-limiting"</dt><dd>The free rank service allows few requests per minute. Reopen Domain shortly.</dd>
+    <dt>No AI buttons</dt><dd>Check Settings → Chrome built-in AI. "Not supported on this device" means Chrome's hardware requirements aren't met; "Not downloaded yet" means click Download model once.</dd>
+    <dt>"Access blocked" / "Error 403: access_denied" when connecting Search Console</dt><dd>Your Google account isn't a test user on Refract SEO's Cloud project. Ask the project owner to add it (see <a href="#gsc">setup</a>).</dd>
+    <dt>"No Search Console property covers this URL"</dt><dd>The signed-in account can't see a property for this site. Add the account as a user of the property in Search Console, or sign in with one that can.</dd>
+    <dt>Crawl stopped early</dt><dd>The status line says why: the 1,000-page limit, the depth limit, the server asking us to slow down, or you pressed Stop.</dd>
+    <dt>INP shows "no interactions yet"</dt><dd>INP needs a click or key press on the page. Interact with the page, then reopen Refract SEO.</dd>
+    <dt>Bot's eye or Crawl asks for access to all sites</dt><dd>They fetch pages outside the current tab, which Chrome only allows with that permission. Declining leaves every other feature working.</dd>
+  </dl>
+</div>
+</body>
+</html>
