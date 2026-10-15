@@ -12,7 +12,8 @@ The popup is a 780×590 panel: a rail with the site, a health score and 15 views
 | View | Answers | Charts / diagrams |
 |---|---|---|
 | Overview | Can this rank, and what do I fix first? | health ring, indexability chain (status → robots → X-Robots → canonical → result), SERP snippet with title/description length meters |
-| Issues | Everything wrong, worst first | each issue jumps to its view |
+| Issues | Everything wrong, worst first, and how to fix it | each issue jumps to its view; **How to fix** = steps + paste-ready snippet for the detected platform (HTML, Next.js, Nuxt, Astro, SvelteKit, Remix, WordPress, Shopify) filled with the page’s values (`fixes.js`, `fixes-more.js`) |
+| Opportunities | What to change or add to gain clicks, rankings and AI citations | ranked cards with estimated click gains: Search Console striking-distance / low-CTR / declining / page-3 queries with missing words, AI Overviews not citing you (saved by the SERP panel), Compare phrase gaps, content additions; Markdown action plan (`opps.js`) |
 | AI search | Will AI engines crawl, parse and cite it? | readiness ring, 5 pillar bars (26 real checks), AI-bot robots.txt grid (GPTBot, ClaudeBot, PerplexityBot…), server-rendered text bar, `llms.txt` |
 | Content | Is the heading hierarchy sound? | H1–H6 bars, outline tree flagging skipped levels, bold/italic lists |
 | Keywords | What is this page actually about? | 1–5 word density bars with title/description/H1 placement marks, CSV |

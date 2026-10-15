@@ -81,11 +81,11 @@ const variants = (url) => { const u = url.replace(/#.*/, ''); return [...new Set
 const CUR = [29, 2], PREV = [57, 30]
 
 /** Page performance for the current period, with the previous period for comparison. */
-export async function pagePerformance(tok, property, url) {
+export async function pagePerformance(tok, property, url, { queryLimit = 25 } = {}) {
   const q = (dimensions, page, [from, to], rowLimit = 1000) => call(tok, `${API}/sites/${encodeURIComponent(property)}/searchAnalytics/query`, { startDate: day(from), endDate: day(to), dimensions, rowLimit, dataState: 'all', dimensionFilterGroups: [{ filters: [{ dimension: 'page', operator: 'equals', expression: page }] }] })
   let page = url, daily = null
   for (const v of variants(url)) { daily = await q(['date'], v, [PREV[0], CUR[1]]); if (daily.rows?.length) { page = v; break } } // Google reports the URL it chose; one call covers both periods
-  const [queries, prevQueries] = daily?.rows?.length ? await Promise.all([q(['query'], page, CUR, 25), q(['query'], page, PREV)]) : [{ rows: [] }, { rows: [] }]
+  const [queries, prevQueries] = daily?.rows?.length ? await Promise.all([q(['query'], page, CUR, queryLimit), q(['query'], page, PREV)]) : [{ rows: [] }, { rows: [] }]
   return compare(daily?.rows ?? [], queries.rows ?? [], prevQueries.rows ?? [], page, day(CUR[0]))
 }
 /** Pure: split daily rows at `split` (YYYY-MM-DD, first day of the current period) and attach each top query's previous-period row. */

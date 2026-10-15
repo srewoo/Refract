@@ -105,8 +105,23 @@
   })
   document.body.append(panel)
 
+  // Remember what this search showed for the saved domain; the Opportunities view reads 'serp:obs'.
+  let lastObs = ''
+  function remember(l) {
+    const query = new URLSearchParams(location.search).get('q')?.trim()
+    if (!domain || !query || !globalThis.chrome?.storage?.local) return
+    const o = { domain, query, aio: !!l.aio, sources: l.aio?.sources ?? [], cites: !!l.aio?.cites, rank: l.rank + 1, firstY: l.first }
+    const sig = JSON.stringify(o)
+    if (sig === lastObs) return // the observer re-runs often; write only when something changed
+    lastObs = sig
+    // ponytail: last 300 searches, latest per domain+query; move to IndexedDB if people track thousands of keywords
+    chrome.storage.local.get({ 'serp:obs': [] }).then(({ 'serp:obs': list }) => chrome.storage.local.set({
+      'serp:obs': [...list.filter((x) => !(x.domain === domain && x.query === query)), { ...o, at: new Date().toISOString() }].slice(-300) }))
+  }
+
   function showLayout(results) {
     const l = layout(results, domain)
+    remember(l)
     results.forEach(({ a }) => a.classList.toggle('sss-mine', mine(realUrl(a), domain)))
     const px = (n) => `${n.toLocaleString()}px`
     const lines = l.first == null ? ['No organic results found on this page.'] : [

@@ -12,13 +12,14 @@ import { Compare } from './views-compare.js'
 import { Local, Redirects } from './views-extra.js'
 import { History } from './views-history.js'
 import { Bing, SearchConsole } from './views-webmaster.js'
+import { Opportunities } from './views-opps.js'
 import { saveSnapshot } from './history.js'
 import * as page from './views-page.js'
 import * as site from './views-site.js'
 
 // Grouped so ~25 sections stay scannable: what's on the page, how crawlers see it, the whole site, and your workflow.
 const GROUPS = {
-  Page: { Overview: page.Overview, Issues: page.Issues, 'AI search': page.GEO, Content: page.Content, Keywords: page.Keywords, Links: site.Links, Images: site.Images, Schema: site.Schema, Social: site.Social, Hreflang: site.Hreflang, 'Local SEO': Local, Speed: page.Speed },
+  Page: { Overview: page.Overview, Issues: page.Issues, Opportunities, 'AI search': page.GEO, Content: page.Content, Keywords: page.Keywords, Links: site.Links, Images: site.Images, Schema: site.Schema, Social: site.Social, Hreflang: site.Hreflang, 'Local SEO': Local, Speed: page.Speed },
   Crawlers: { "Bot's eye": BotsEye, 'Redirects & headers': Redirects },
   Site: { 'Search Console': SearchConsole, 'Bing Webmaster': Bing, Crawl, Rankings, Backlinks, Domain: site.Domain, 'Ads & tags': site.Tags },
   Workflow: { History, Compare, Tools: site.Tools, Settings: site.Settings },

@@ -4,6 +4,7 @@ import { band, geo, health, outline, placement } from './geo.js'
 import { overlay } from './page-actions.js'
 import { cruxBlock, keywordMetricsBlock } from './views-data.js'
 import { aiReady, descSuggest, explainBtn, titleSuggest } from './ai-ui.js'
+import { howTo } from './fix-ui.js'
 import { buildReport } from './report.js'
 import { stack, SERP_TITLE_PX } from './rules.js'
 import { h, head, block, kv, tag, btn, ext, ms, num, ring, lengthMeter, bars, timeline, tree, chain, copyBtn, download } from './ui.js'
@@ -54,7 +55,7 @@ export const Issues = {
     return [
       head('Issues', `${hl.list.length} found on this page.`, copyBtn('Copy list', () => hl.list.map((i) => `[${i.level}] ${i.msg}${i.fix ? ` — ${i.fix}` : ''}`).join('\n')), reportBtn(d)),
       groups.map(([label, list]) => list.length ? block(`${label} (${list.length})`, h('ul', { class: 'issue-list' }, list.map((i) =>
-        h('li', {}, tag(i.level), h('span', {}, i.msg, i.fix ? h('span', { class: 'fix' }, i.fix) : '', aiReady(d) ? explainBtn(d, i) : ''), h('button', { class: 'link', type: 'button', onclick: () => go(i.section) }, `Open ${i.section}`))))) : ''),
+        h('li', {}, tag(i.level), h('span', {}, i.msg, i.fix ? h('span', { class: 'fix' }, i.fix) : '', howTo(d, i), aiReady(d) ? explainBtn(d, i) : ''), h('button', { class: 'link', type: 'button', onclick: () => go(i.section) }, `Open ${i.section}`))))) : ''),
       hl.list.length ? '' : h('p', { class: 'empty' }, 'No issues. Check AI search readiness next.', btn('AI search', () => go('AI search'))),
     ]
   },

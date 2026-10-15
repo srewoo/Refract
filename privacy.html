@@ -20,7 +20,7 @@
   <ul>
     <li><strong>The page you audit</strong>: when you click the toolbar icon (or have the side panel or full-screen view open for a tab), Refract SEO reads that tab's HTML, headings, links, images, meta tags, structured data, performance timings and HTTP response headers. Nothing is read from other tabs.</li>
     <li><strong>The site's own public files</strong>: <code>robots.txt</code>, <code>llms.txt</code>, sitemaps and, if the page declares one on the same site, its canonical URL. These are fetched from the page itself.</li>
-    <li><strong>Google search results pages</strong>: on <code>google.*/search</code> Refract SEO numbers results and can extract "People also ask" questions. This happens locally in the page; nothing about your searches is sent anywhere. Both can be turned off in Settings.</li>
+    <li><strong>Google search results pages</strong>: on <code>google.*/search</code> Refract SEO numbers results and can extract "People also ask" questions. This happens locally in the page; nothing about your searches is sent anywhere. If you type your domain into the SERP layout panel, each search you then make stores the query, whether an AI Overview showed and which sites it cited, and your position, in <code>chrome.storage.local</code> on this computer for the Opportunities view. Both can be turned off in Settings.</li>
   </ul>
   <p>Refract SEO does not read form inputs, passwords, cookies or browsing history.</p>
 
@@ -32,6 +32,7 @@
     <tr><td>API keys you enter (DataForSEO, Semrush, Ahrefs, Google CrUX, Bing Webmaster) and each connector's last test result</td><td><code>chrome.storage.local</code> on this computer; never synced</td><td>Until you remove them in Settings or remove Refract SEO</td></tr>
     <tr><td>Google Search Console sign-in</td><td>Chrome's own identity token cache (Refract SEO does not store the token)</td><td>Until you press Disconnect, which also revokes it at Google</td></tr>
     <tr><td>Page snapshots for History (title, description, canonical, robots, counts, scores, issue list), up to 50 per URL and 300 URLs</td><td><code>chrome.storage.local</code> on this computer</td><td>Oldest dropped automatically; removed with Refract SEO</td></tr>
+    <tr><td>Google searches seen with your domain set (query, AI Overview sources, your position), last 300; Compare’s phrase gaps per page</td><td><code>chrome.storage.local</code> on this computer</td><td>Oldest searches dropped automatically; removed with Refract SEO</td></tr>
     <tr><td>Tracked keywords and rank history; last backlink result per domain</td><td><code>chrome.storage.local</code> on this computer</td><td>Until removed with Refract SEO</td></tr>
     <tr><td>"View as crawler" setting for a tab</td><td>Browser session memory</td><td>Until you switch back, close the tab or restart Chrome</td></tr>
   </table>

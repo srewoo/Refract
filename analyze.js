@@ -29,28 +29,29 @@ export const DESC_RANGE = [70, 160]
 /** Checklist of on-page problems, each { level: 'bad'|'warn', msg }. */
 export function issues(d) {
   const out = []
-  const add = (level, msg, section = 'Overview') => out.push({ level, msg, section })
+  // kind: which fix (fixes.js) applies; not an id, so History keys for these checks stay as they were.
+  const add = (level, msg, section = 'Overview', kind) => out.push({ level, msg, section, kind })
   const t = lengthStatus(d.title, TITLE_RANGE)
   const m = lengthStatus(d.description, DESC_RANGE)
-  if (t.status === 'bad') add('bad', 'Missing <title>')
-  else if (t.status === 'warn') add('warn', `Title is ${t.len} chars (aim ${TITLE_RANGE.join('–')})`)
-  if (m.status === 'bad') add('bad', 'Missing meta description')
-  else if (m.status === 'warn') add('warn', `Description is ${m.len} chars (aim ${DESC_RANGE.join('–')})`)
+  if (t.status === 'bad') add('bad', 'Missing <title>', 'Overview', 'title')
+  else if (t.status === 'warn') add('warn', `Title is ${t.len} chars (aim ${TITLE_RANGE.join('–')})`, 'Overview', 'title')
+  if (m.status === 'bad') add('bad', 'Missing meta description', 'Overview', 'description')
+  else if (m.status === 'warn') add('warn', `Description is ${m.len} chars (aim ${DESC_RANGE.join('–')})`, 'Overview', 'description')
   const h1 = d.headings.filter((h) => h.level === 1).length
-  if (h1 === 0) add('bad', 'No H1', 'Content')
-  if (h1 > 1) add('warn', `${h1} H1 tags`, 'Content')
-  if (!d.indexable) add('bad', 'Page is not indexable (noindex or non-2xx)')
-  if (!d.canonical) add('warn', 'No canonical link')
-  else if (d.canonicalSelf === false) add('warn', 'Canonical points to another URL')
-  if (!d.lang) add('warn', 'No <html lang>')
-  if (!d.viewport) add('warn', 'No viewport meta (mobile)')
+  if (h1 === 0) add('bad', 'No H1', 'Content', 'h1')
+  if (h1 > 1) add('warn', `${h1} H1 tags`, 'Content', 'h1')
+  if (!d.indexable) add('bad', 'Page is not indexable (noindex or non-2xx)', 'Overview', 'indexable')
+  if (!d.canonical) add('warn', 'No canonical link', 'Overview', 'canonical')
+  else if (d.canonicalSelf === false) add('warn', 'Canonical points to another URL', 'Overview', 'canonical')
+  if (!d.lang) add('warn', 'No <html lang>', 'Overview', 'lang')
+  if (!d.viewport) add('warn', 'No viewport meta (mobile)', 'Overview', 'viewport')
   const noAlt = d.images.filter((i) => i.alt === null).length
-  if (noAlt) add('warn', `${noAlt} image(s) missing alt`, 'Images')
-  if (!d.social['og:title'] && !d.social['og:image']) add('warn', 'No Open Graph tags', 'Social')
-  if (!d.schema.types.length && !d.schema.microdata.length) add('warn', 'No structured data', 'Schema')
-  if (d.schema.jsonLd.some((j) => !j.ok)) add('bad', 'Invalid JSON-LD block', 'Schema')
-  if (d.wordCount < 300) add('warn', `Thin content (${d.wordCount} words)`, 'Keywords')
-  if (!d.robotsTxt) add('warn', 'robots.txt not found')
+  if (noAlt) add('warn', `${noAlt} image(s) missing alt`, 'Images', 'img.no_alt')
+  if (!d.social['og:title'] && !d.social['og:image']) add('warn', 'No Open Graph tags', 'Social', 'social')
+  if (!d.schema.types.length && !d.schema.microdata.length) add('warn', 'No structured data', 'Schema', 'schema')
+  if (d.schema.jsonLd.some((j) => !j.ok)) add('bad', 'Invalid JSON-LD block', 'Schema', 'schema.invalid')
+  if (d.wordCount < 300) add('warn', `Thin content (${d.wordCount} words)`, 'Keywords', 'content.thin')
+  if (!d.robotsTxt) add('warn', 'robots.txt not found', 'Overview', 'robots_txt')
   return out
 }
 

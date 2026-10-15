@@ -345,3 +345,15 @@ ol.steps code { word-break: break-all; }
 .panel .conn-head { flex-direction: column; }
 .stats-row .stat .tag { display: flex; margin-top: 3px; font-size: 11px; color: var(--ink-2); }
 .link-st { white-space: nowrap; }
+details.howto { margin-top: 4px; font-size: 12px; }
+details.howto summary { cursor: pointer; color: var(--accent, #0d7a6f); font-weight: 600; width: fit-content; }
+details.howto .howto-body { margin-top: 6px; display: grid; gap: 6px; }
+details.howto .howto-body p { margin: 0; }
+details.howto pre.code-block { margin: 0; white-space: pre; }
+.opp-list { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 10px; }
+.opp { border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; }
+.opp-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.opp-gain { margin-left: auto; font-size: 12px; color: var(--accent); font-weight: 600; }
+.opp p { margin: 6px 0; }
+.opp-actions { margin: 0; padding-left: 18px; font-size: 12px; display: grid; gap: 3px; }
+.opp-sources { margin: 0; padding-left: 18px; display: grid; gap: 6px; }

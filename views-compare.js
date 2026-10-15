@@ -67,6 +67,7 @@ export const Compare = {
         const cols = [{ ...d, label: 'This page' }, ...results.map((r, i) => ({ ...r, label: `Competitor ${i + 1}` }))]
         const ok = cols.filter((c) => !c.error)
         const gaps = phraseGaps(d, ok.slice(1))
+        if (ok.length > 1) chrome.storage.local.set({ [`gaps:${d.url.replace(/#.*/, '')}`]: { at: new Date().toISOString(), gaps: gaps.gaps, competitors: ok.slice(1).map((c) => c.url) } }) // read by Opportunities
         out.replaceChildren(
           h('div', { class: 'scroll-x' }, h('table', { class: 'compare' },
             h('thead', {}, h('tr', {}, h('th', {}, ''), cols.map((c) => h('th', {}, c.label, h('div', { class: 'mono small' }, new URL(c.url).host))))),
