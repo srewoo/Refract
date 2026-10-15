@@ -6,7 +6,12 @@ import { aiReady, altSuggest, jsonLdDraft } from './ai-ui.js'
 import { aiStatus, session } from './ai.js'
 import { connectorsPanel } from './connectors.js'
 import { AGENTS, setAgent } from './ua.js'
+import { LINK_CHECK_MAX, checkLinks, targetKey, uniqueTargets } from './linkcheck.js'
 import { h, head, block, kv, tag, btn, ext, num, bars, stack, tree, rankLine, download } from './ui.js'
+
+// Link check outcome → status tag. Status code shown where the response gave one.
+const LINK_TAG = { ok: ['good', 'OK'], redirect: ['warn', 'Redirect'], restricted: ['warn', 'Restricted'], broken: ['bad', 'Broken'], error: ['bad', 'No response'] }
+const linkTag = (r) => tag(LINK_TAG[r.outcome][0], `${LINK_TAG[r.outcome][1]}${r.status ? ` ${r.status}` : ''}`)
 
 export const Links = {
   render(d) {
@@ -14,21 +19,46 @@ export const Links = {
     let filter = 'all'
     const list = h('div', { class: 'scroll-x' })
     const filters = h('div', { class: 'seg-ctl', role: 'tablist' })
+    const result = (l) => d.linkCheck?.get(targetKey(l.href))
+    const problem = (l) => { const r = result(l); return !!r && r.outcome !== 'ok' }
+    const summary = h('div')
     const draw = () => {
       filters.querySelectorAll('button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.f === filter)))
-      const rows = d.links.filter((l) => filter === 'all' || (filter === 'internal' ? l.internal : filter === 'external' ? !l.internal : l.nofollow || l.sponsored || l.ugc))
-      list.replaceChildren(h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, 'Anchor text'), h('th', {}, 'URL'), h('th', {}, 'rel'))),
+      const rows = d.links.filter((l) => filter === 'all' || (filter === 'internal' ? l.internal : filter === 'external' ? !l.internal : filter === 'problems' ? problem(l) : l.nofollow || l.sponsored || l.ugc))
+      list.replaceChildren(h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, 'Anchor text'), h('th', {}, 'URL'), h('th', {}, 'rel'), d.linkCheck ? h('th', {}, 'Status') : '')),
         h('tbody', {}, rows.slice(0, 400).map((l) => h('tr', {}, h('td', {}, l.text || h('span', { class: 'muted' }, '(no text)')), h('td', { class: 'mono' }, ext(l.href)),
-          h('td', { class: 'mono' }, [l.nofollow && 'nofollow', l.sponsored && 'sponsored', l.ugc && 'ugc'].filter(Boolean).join(' ') || '—'))))),
+          h('td', { class: 'mono' }, [l.nofollow && 'nofollow', l.sponsored && 'sponsored', l.ugc && 'ugc'].filter(Boolean).join(' ') || '—'),
+          d.linkCheck ? h('td', { class: 'link-st' }, result(l) ? linkTag(result(l)) : h('span', { class: 'muted' }, targetKey(l.href) ? '…' : 'not http')) : '')))),
       rows.length > 400 ? h('p', { class: 'muted' }, `First 400 of ${rows.length}; Export CSV has all.`) : '')
+      if (!d.linkCheck) return
+      const counts = Object.fromEntries(Object.keys(LINK_TAG).map((k) => [k, 0]))
+      for (const r of d.linkCheck.values()) counts[r.outcome]++
+      summary.replaceChildren(stack([{ label: 'OK', value: counts.ok, status: 'good' }, { label: 'Redirect', value: counts.redirect, status: 'warn' }, { label: 'Restricted (401/403/429)', value: counts.restricted, status: 'warn' }, { label: 'Broken', value: counts.broken, status: 'bad' }, { label: 'No response', value: counts.error, status: 'bad' }], { caption: 'Link status' }))
     }
-    ;['all', 'internal', 'external', 'nofollow'].forEach((f) => filters.append(h('button', { role: 'tab', type: 'button', 'data-f': f, onclick: () => { filter = f; draw() } }, f)))
+    ;['all', 'internal', 'external', 'nofollow', 'problems'].forEach((f) => filters.append(h('button', { role: 'tab', type: 'button', 'data-f': f, onclick: () => { filter = f; draw() } }, f)))
     draw()
     const dom = topDomains(d.links)
+    const checkStatus = h('span', { class: 'muted small', role: 'status' })
+    const checkBtn = btn('Check links', async (e) => {
+      // permissions.request first, inside the click: an earlier await would drop the user gesture.
+      if (!(await chrome.permissions.request({ origins: ['<all_urls>'] }))) { checkStatus.textContent = 'Site access is needed to request the links.'; return }
+      e.target.disabled = true
+      d.linkCheck = new Map()
+      let queued = false
+      const redraw = () => { if (!queued) { queued = true; setTimeout(() => { queued = false; draw() }, 250) } }
+      try {
+        await checkLinks(d.links, (url, r, done, total) => { d.linkCheck.set(url, r); checkStatus.textContent = `Checked ${done} of ${total}…`; redraw() })
+        const bad = [...d.linkCheck.values()].filter((r) => r.outcome === 'broken' || r.outcome === 'error').length
+        const total = uniqueTargets(d.links).length
+        checkStatus.textContent = `Done. ${bad} broken or not responding${total > LINK_CHECK_MAX ? ` · first ${LINK_CHECK_MAX} of ${total} unique links checked` : ''}.`
+      } catch (err) { checkStatus.textContent = `Check failed: ${err.message ?? err}` } finally { e.target.disabled = false; draw() }
+    })
     return [
       head('Links', `${num(st.total)} links (${num(st.unique)} unique) to ${num(new Set(d.links.filter((l) => !l.internal).map((l) => { try { return new URL(l.href).hostname } catch { return l.href } })).size)} external hosts.`,
-        overlayBtn(d, 'nofollow', 'Highlight nofollow'),
-        btn('Export CSV', () => download(`links-${d.host}.csv`, toCsv(d.links)))),
+        checkBtn, overlayBtn(d, 'nofollow', 'Highlight nofollow'),
+        btn('Export CSV', () => download(`links-${d.host}.csv`, toCsv(d.linkCheck ? d.links.map((l) => ({ ...l, status: result(l)?.status ?? '', outcome: result(l)?.outcome ?? '' })) : d.links)))),
+      h('p', { class: 'muted small' }, 'Check links requests every unique link on this page (up to 300, six at a time, no cookies) and reports its status. ', checkStatus),
+      summary,
       h('div', { class: 'split' },
         h('div', {}, stack([{ label: 'Internal', value: st.internal }, { label: 'External', value: st.external }], { caption: 'Where links point' }),
           stack([{ label: 'Follow', value: st.total - st.nofollow }, { label: 'Nofollow', value: st.nofollow }, { label: 'Sponsored / UGC', value: st.sponsored + st.ugc }], { caption: 'How much link equity passes' })),
@@ -212,7 +242,7 @@ export const Settings = {
       const save = (k, v) => chrome.storage.sync.set({ [k]: v })
       const toggle = (k, label, hint) => h('label', { class: 'setting' }, h('input', { type: 'checkbox', checked: cfg[k], onchange: (e) => save(k, e.target.checked) }), h('span', {}, h('b', {}, label), h('span', { class: 'muted small' }, hint)))
       out.replaceChildren(
-        toggle('serpBadges', 'Google results: position badges and Copy results CSV', 'Applies on next Google search.'),
+        toggle('serpBadges', 'Google results: position badges, SERP layout panel and Copy results CSV', 'Applies on next Google search.'),
         toggle('paaButton', 'Google results: People Also Ask extractor button', 'Applies on next Google search.'),
         aiSetting(d),
         h('label', { class: 'setting' }, h('span', {}, h('b', {}, 'Open on'), h('span', { class: 'muted small' }, 'First view when the popup opens.')),

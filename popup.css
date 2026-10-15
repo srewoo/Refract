@@ -343,3 +343,5 @@ ol.steps code { word-break: break-all; }
 .pill-status.on { color: var(--ink); border-color: var(--good); } .pill-status.on i { background: var(--good); border-color: var(--good); }
 .pill-status.warn i { background: var(--warn); border-color: var(--warn); }
 .panel .conn-head { flex-direction: column; }
+.stats-row .stat .tag { display: flex; margin-top: 3px; font-size: 11px; color: var(--ink-2); }
+.link-st { white-space: nowrap; }

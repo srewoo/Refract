@@ -77,14 +77,27 @@ export function pickProperty(sites, url) {
 const day = (offset) => new Date(Date.now() - offset * 864e5).toISOString().slice(0, 10)
 const variants = (url) => { const u = url.replace(/#.*/, ''); return [...new Set([u, u.endsWith('/') ? u.slice(0, -1) : `${u}/`])] }
 
-/** Page performance for the last 28 days (data lags ~2–3 days). */
+// Current period = last 28 days of data (offsets 29…2, data lags ~2–3 days); previous = the 28 days before it.
+const CUR = [29, 2], PREV = [57, 30]
+
+/** Page performance for the current period, with the previous period for comparison. */
 export async function pagePerformance(tok, property, url) {
-  const q = (dimensions, page, rowLimit = 1000) => call(tok, `${API}/sites/${encodeURIComponent(property)}/searchAnalytics/query`, { startDate: day(30), endDate: day(2), dimensions, rowLimit, dataState: 'all', dimensionFilterGroups: [{ filters: [{ dimension: 'page', operator: 'equals', expression: page }] }] })
+  const q = (dimensions, page, [from, to], rowLimit = 1000) => call(tok, `${API}/sites/${encodeURIComponent(property)}/searchAnalytics/query`, { startDate: day(from), endDate: day(to), dimensions, rowLimit, dataState: 'all', dimensionFilterGroups: [{ filters: [{ dimension: 'page', operator: 'equals', expression: page }] }] })
   let page = url, daily = null
-  for (const v of variants(url)) { daily = await q(['date'], v); if (daily.rows?.length) { page = v; break } } // Google reports the URL it chose
-  const queries = daily?.rows?.length ? await q(['query'], page, 25) : { rows: [] }
-  return summarise(daily?.rows ?? [], queries.rows ?? [], page)
+  for (const v of variants(url)) { daily = await q(['date'], v, [PREV[0], CUR[1]]); if (daily.rows?.length) { page = v; break } } // Google reports the URL it chose; one call covers both periods
+  const [queries, prevQueries] = daily?.rows?.length ? await Promise.all([q(['query'], page, CUR, 25), q(['query'], page, PREV)]) : [{ rows: [] }, { rows: [] }]
+  return compare(daily?.rows ?? [], queries.rows ?? [], prevQueries.rows ?? [], page, day(CUR[0]))
 }
+/** Pure: split daily rows at `split` (YYYY-MM-DD, first day of the current period) and attach each top query's previous-period row. */
+export function compare(dailyRows, queryRows, prevQueryRows, page, split) {
+  const cur = summarise(dailyRows.filter((r) => r.keys[0] >= split), queryRows, page)
+  const prev = summarise(dailyRows.filter((r) => r.keys[0] < split), [], page)
+  const before = new Map(prevQueryRows.map((r) => [r.keys[0], r]))
+  cur.queries = cur.queries.map((x) => ({ ...x, prev: before.has(x.query) ? { clicks: before.get(x.query).clicks, position: before.get(x.query).position } : null }))
+  return { ...cur, previous: prev.impressions ? { clicks: prev.clicks, impressions: prev.impressions, ctr: prev.ctr, position: prev.position } : null }
+}
+/** Pure: relative change (0.25 = +25%), null when there's nothing to compare against. */
+export const change = (now, before) => (now == null || !before ? null : (now - before) / before)
 /** Pure. */
 export function summarise(dailyRows, queryRows, page) {
   const clicks = dailyRows.reduce((s, r) => s + r.clicks, 0), impressions = dailyRows.reduce((s, r) => s + r.impressions, 0)

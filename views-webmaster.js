@@ -1,6 +1,6 @@
 // Google Search Console and Bing Webmaster Tools views, plus their Settings block.
 import { bingForPage } from './bing.js'
-import { GSC_PERMS, TEST_USER_MSG, inspect, listSites, oauthProblem, pagePerformance, pickProperty, signIn, signOut, token } from './gsc.js'
+import { GSC_PERMS, TEST_USER_MSG, change, inspect, listSites, oauthProblem, pagePerformance, pickProperty, signIn, signOut, token } from './gsc.js'
 import { loadKeys } from './keys.js'
 import { h, head, block, kv, tag, btn, num, lineChart, ext } from './ui.js'
 
@@ -8,7 +8,10 @@ const note = (t) => h('p', { class: 'muted small' }, t)
 const notice = () => h('div', { class: 'notice', role: 'note' }, h('b', {}, 'Test user required. '), TEST_USER_MSG)
 const pct = (v) => (v == null ? '—' : `${(v * 100).toFixed(1)}%`)
 const pos = (v) => (v == null ? '—' : v.toFixed(1))
-const tiles = (rows) => h('div', { class: 'stats-row' }, rows.map(([v, l]) => h('div', { class: 'stat' }, h('b', {}, v), h('span', {}, l))))
+const tiles = (rows) => h('div', { class: 'stats-row' }, rows.map(([v, l, delta]) => h('div', { class: 'stat' }, h('b', {}, v), h('span', {}, l), delta ?? '')))
+// Period-over-period deltas as status tags (glyph + word). Position: lower is better, shown as places gained or lost.
+const pctDelta = (now, before) => { const c = change(now, before); return c == null ? '' : tag(c > 0.005 ? 'good' : c < -0.005 ? 'bad' : 'warn', `${c > 0 ? '+' : ''}${(c * 100).toFixed(c > -0.1 && c < 0.1 ? 1 : 0)}%`) }
+const posDelta = (now, before) => { if (now == null || before == null) return ''; const d = before - now; return tag(d > 0.05 ? 'good' : d < -0.05 ? 'bad' : 'warn', Math.abs(d) < 0.05 ? '0.0' : `${d > 0 ? '▲' : '▼'} ${Math.abs(d).toFixed(1)}`) }
 
 export const SearchConsole = {
   name: 'Search Console',
@@ -35,12 +38,18 @@ export const SearchConsole = {
           e.target.disabled = true; insOut.replaceChildren(note('Inspecting…'))
           try { insOut.replaceChildren(inspection(await inspect(tok, property, d.url))) } catch (err) { insOut.replaceChildren(note(`Inspection failed: ${err.message}`)) } finally { e.target.disabled = false }
         }, { class: 'btn primary' })
+        const p = perf.previous
         out.replaceChildren(
-          note(`Property: ${property} · last 28 days (Search Console data lags 2–3 days)${perf.page !== d.url.replace(/#.*/, '') ? ` · reported as ${perf.page}` : ''}`),
-          tiles([[num(perf.clicks), 'Clicks'], [num(perf.impressions), 'Impressions'], [pct(perf.ctr), 'CTR'], [pos(perf.position), 'Avg position']]),
+          note(`Property: ${property} · last 28 days vs the 28 days before (Search Console data lags 2–3 days)${perf.page !== d.url.replace(/#.*/, '') ? ` · reported as ${perf.page}` : ''}`),
+          tiles([[num(perf.clicks), 'Clicks', pctDelta(perf.clicks, p?.clicks)], [num(perf.impressions), 'Impressions', pctDelta(perf.impressions, p?.impressions)],
+            [pct(perf.ctr), 'CTR', pctDelta(perf.ctr, p?.ctr)], [pos(perf.position), 'Avg position', posDelta(perf.position, p?.position)]]),
+          p ? '' : note('No data for the previous 28 days, so there is nothing to compare against.'),
           perf.daily.length > 1 ? block('Clicks per day', lineChart(perf.daily.map((x) => ({ date: x.date, value: x.clicks })), { label: 'Clicks', height: 130 })) : note('No search traffic recorded for this URL in the period.'),
-          perf.queries.length ? block(`Top queries (${perf.queries.length})`, h('div', { class: 'scroll-x crawl-list' }, h('table', {}, h('thead', {}, h('tr', {}, ['Query', 'Clicks', 'Impr.', 'CTR', 'Pos.'].map((t) => h('th', {}, t)))),
-            h('tbody', {}, perf.queries.map((q) => h('tr', {}, h('td', {}, q.query), h('td', { class: 'mono' }, num(q.clicks)), h('td', { class: 'mono' }, num(q.impressions)), h('td', { class: 'mono' }, pct(q.ctr)), h('td', { class: 'mono' }, pos(q.position)))))))) : '',
+          perf.queries.length ? block(`Top queries (${perf.queries.length})`, h('div', { class: 'scroll-x crawl-list' }, h('table', {}, h('thead', {}, h('tr', {}, ['Query', 'Clicks', 'Δ clicks', 'Impr.', 'CTR', 'Pos.', 'Δ pos.'].map((t) => h('th', {}, t)))),
+            h('tbody', {}, perf.queries.map((q) => h('tr', {}, h('td', {}, q.query), h('td', { class: 'mono' }, num(q.clicks)),
+              h('td', { class: 'mono nowrap' }, q.prev ? pctDelta(q.clicks, q.prev.clicks) || (q.clicks ? tag('good', 'new clicks') : '—') : tag('good', 'new')),
+              h('td', { class: 'mono' }, num(q.impressions)), h('td', { class: 'mono' }, pct(q.ctr)), h('td', { class: 'mono' }, pos(q.position)),
+              h('td', { class: 'mono nowrap' }, q.prev ? posDelta(q.position, q.prev.position) : '—'))))))) : '',
           block('URL Inspection (Google’s index)', h('div', { class: 'bar-line' }, inspectBtn), insOut),
           h('div', { class: 'bar-line' }, btn('Disconnect', () => signOut().then(load))))
       } catch (e) { out.replaceChildren(h('div', { class: 'empty' }, h('p', {}, e.message), /403|denied|verification/i.test(e.message) ? h('p', { class: 'small' }, TEST_USER_MSG) : '')) }

@@ -16,7 +16,7 @@ The popup is a 780×590 panel: a rail with the site, a health score and 15 views
 | AI search | Will AI engines crawl, parse and cite it? | readiness ring, 5 pillar bars (26 real checks), AI-bot robots.txt grid (GPTBot, ClaudeBot, PerplexityBot…), server-rendered text bar, `llms.txt` |
 | Content | Is the heading hierarchy sound? | H1–H6 bars, outline tree flagging skipped levels, bold/italic lists |
 | Keywords | What is this page actually about? | 1–5 word density bars with title/description/H1 placement marks, CSV |
-| Links | Where does link equity go? | internal/external and follow/nofollow/sponsored stacked bars, top external domains, filterable table, nofollow highlighter, CSV |
+| Links | Where does link equity go? | internal/external and follow/nofollow/sponsored stacked bars, top external domains, filterable table, nofollow highlighter, **Check links** (status of every link: OK / redirect / restricted / broken / no response, `linkcheck.js`), CSV |
 | Images | Is alt text covered? | alt coverage stacked bar, format bars, thumbnails, CSV |
 | Schema | What does structured data declare? | JSON-LD type tree (nested via property), microdata, validators, raw blocks |
 | Social | What will a share look like? | OG and X card previews |
@@ -87,7 +87,7 @@ Gemini Nano through the Prompt API, ported from Refract's `tier1.ts` and `firewa
 
 ### Data sources, accounts and analyst workflow
 
-- **Search Console** (`gsc.js`): Refract's method: `chrome.identity.getAuthToken` with Refract's Chrome-extension OAuth client (`manifest.oauth2`), which works because the manifest carries Refract's `key` (same extension ID). Read-only scope. Shows clicks, impressions, CTR, position, daily clicks and top queries; URL Inspection runs on **Inspect** (daily quota). **While the Cloud app is in Testing, the Google account must be a Test user on its OAuth consent screen**; the connector card and the view say so.
+- **Search Console** (`gsc.js`): Refract's method: `chrome.identity.getAuthToken` with Refract's Chrome-extension OAuth client (`manifest.oauth2`), which works because the manifest carries Refract's `key` (same extension ID). Read-only scope. Shows clicks, impressions, CTR, position, daily clicks and top queries, each against the previous 28 days (% change, position change, new queries); URL Inspection runs on **Inspect** (daily quota). **While the Cloud app is in Testing, the Google account must be a Test user on its OAuth consent screen**; the connector card and the view say so.
 - **Bing Webmaster** (`bing.js`): API key. Shows page clicks, impressions and position, the site's top queries and inbound links.
 - **BYOK providers** (`keys.js`, `providers.js`): DataForSEO, Semrush and Ahrefs, routed per capability (ranks, keyword volume/difficulty, backlinks) with a market setting. Keys live in `chrome.storage.local` and go only to their provider; each API host is requested as a permission when its key is saved. Request and response contracts come from Refract's connectors.
 - **CrUX field data** (`crux.js`): free Google key; URL and origin p75 plus good/needs-work/poor shares, phone or desktop, and a 25-week trend, in Speed.
@@ -106,11 +106,11 @@ Checks: `node sss/smoke-data.mjs` drives all of the above in real Chromium with 
 
 Right-click menu (`background.js`): view the site in Ahrefs/Semrush/SimilarWeb/Majestic/Moz/Archive.org, `site:` and `site: -inurl:https` searches, highlight nofollow links, and "check duplicates" of selected text across the web or on this site. The Links tab also has a nofollow-highlight button.
 
-On Google results pages (`serp.js`) results get position badges plus a "Copy results CSV" button. `paa.js` adds **Extract People Also Ask**: pick a depth (1–3); it expands each question, records the answer source, and follows the questions Google adds, breadth-first (cap 100). Results show level and parent, with Copy/Download CSV.
+On Google results pages (`serp.js`) results get position badges plus a "Copy results CSV" button (with each result's pixel offset). A **SERP layout** panel shows how far down the first organic result sits, which blocks are above it (ads, AI Overview, featured snippet, PAA, local pack…), whether an AI Overview shows and which sites it links to, and, for a saved domain, highlights that domain's result and says whether the AI Overview cites it. Blocks are matched by English heading text plus page geometry, not Google class names. `paa.js` adds **Extract People Also Ask**: pick a depth (1–3); it expands each question, records the answer source, and follows the questions Google adds, breadth-first (cap 100). Results show level and parent, with Copy/Download CSV.
 
 **View as crawler** (Tools tab, `ua.js`): Googlebot Smartphone/Desktop, Bingbot or GPTBot. A declarativeNetRequest session rule sets the `User-Agent` header for that tab only and reloads it. The popup shows a banner with a "Back to normal" button while it's on, and the rule is dropped when the tab closes. Only the header changes; in-page `navigator.userAgent` stays the real one.
 
-Permissions: `activeTab`, `scripting`, `contextMenus`, `declarativeNetRequestWithHostAccess`, `storage`, `sidePanel`. Site access (`<all_urls>`) is an *optional* permission, requested the first time you pick a crawler view or run Bot's eye. That keeps the install warning-free. Nothing runs until you click the icon, except the SERP scripts on Google.
+Permissions: `activeTab`, `scripting`, `contextMenus`, `declarativeNetRequestWithHostAccess`, `storage`, `sidePanel`. Site access (`<all_urls>`) is an *optional* permission, requested the first time you pick a crawler view run Bot's eye or Check links. That keeps the install warning-free. Nothing runs until you click the icon, except the SERP scripts on Google.
 
 **Not ported:** AITDK traffic/keyword numbers and Open SEO Stats' IP geolocation. Both come from those vendors' private APIs, so they're linked out (SimilarWeb, Semrush, ipinfo) instead.
 

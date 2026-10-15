@@ -46,6 +46,7 @@
     <tr><td></td><td><code>tranco-list.eu</code></td><td>The registered domain (popularity rank)</td></tr>
     <tr><td></td><td><code>ipinfo.io</code></td><td>The website server's IP address (location and network). Not your IP address beyond what any web request reveals.</td></tr>
     <tr><td></td><td><code>archive.org</code></td><td>The registered domain (first Wayback Machine capture)</td></tr>
+    <tr><td>Check links (Links view)</td><td>Every website the current page links to</td><td>One HEAD request per unique link (GET when HEAD is refused), up to 300, <strong>without your cookies</strong>, only when you press Check links. Only the status code is read.</td></tr>
     <tr><td>Bot's eye</td><td>The website you are auditing</td><td>Six requests for the current URL with crawler User-Agent strings, <strong>without your cookies</strong></td></tr>
     <tr><td>Site crawl</td><td>The website you are auditing</td><td>Up to 200 page requests on that site, without your cookies, paced one at a time, obeying its <code>robots.txt</code></td></tr>
     <tr><td>Alt-text suggestion</td><td>The website you are auditing</td><td>One request for that image file, without your cookies, so the on-device model can look at it</td></tr>
@@ -73,7 +74,7 @@
     <tr><td><code>unlimitedStorage</code></td><td>Crawls of up to 1,000 pages and History snapshots can exceed Chrome's default extension storage.</td></tr>
     <tr><td><code>webRequest</code> (optional)</td><td>Requested only when you first trace a redirect chain, to read each hop's status and headers of Refract SEO's own request.</td></tr>
     <tr><td><code>identity</code> (optional)</td><td>Requested only when you connect Search Console, so Chrome can sign you in with Google.</td></tr>
-    <tr><td>Access to all sites (optional)</td><td>Requested only the first time you use View as crawler, Bot's eye, Crawl, Compare or Redirects, because those fetch pages outside the current tab. Data providers are requested per provider, only for their API host, when you save a key. You can decline and every other feature still works.</td></tr>
+    <tr><td>Access to all sites (optional)</td><td>Requested only the first time you use View as crawler, Bot's eye, Check links, Crawl, Compare or Redirects, because those fetch pages outside the current tab. Data providers are requested per provider, only for their API host, when you save a key. You can decline and every other feature still works.</td></tr>
     <tr><td>Google search pages</td><td>Position numbers and People Also Ask extraction on results pages.</td></tr>
   </table></div>
 

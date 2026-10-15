@@ -52,7 +52,7 @@
     <tr><td>AI search</td><td>How ready the page is for AI answer engines: which AI crawlers robots.txt blocks, how much text exists before JavaScript runs, <code>llms.txt</code>, structured data and trust signals.</td></tr>
     <tr><td>Content</td><td>Heading counts and outline (skipped levels highlighted), bold and italic text. "Label headings on page" tags each heading in the page itself.</td></tr>
     <tr><td>Keywords</td><td>1–5 word phrase density, marked when a phrase also appears in the title (T), description (D) or H1.</td></tr>
-    <tr><td>Links</td><td>Internal vs external, follow vs nofollow/sponsored/UGC, most-linked domains, full list. "Highlight nofollow" marks them on the page.</td></tr>
+    <tr><td>Links</td><td>Internal vs external, follow vs nofollow/sponsored/UGC, most-linked domains, full list. "Highlight nofollow" marks them on the page. <strong>Check links</strong> requests every unique link (up to 300, without cookies) and marks each OK, Redirect, Restricted (401/403/429, often a bot block rather than a broken page), Broken or No response; the Problems filter lists the rest, and Export CSV includes the status.</td></tr>
     <tr><td>Images</td><td>Alt-text coverage and formats. "Mark on page" outlines images with no alt.</td></tr>
     <tr><td>Schema</td><td>JSON-LD type tree, required/recommended properties per type, raw blocks, links to Google's Rich Results Test.</td></tr>
     <tr><td>Social</td><td>Facebook/LinkedIn and X card previews.</td></tr>
@@ -61,7 +61,7 @@
     <tr><td>Speed</td><td>Lab numbers from this load (LCP, CLS, INP so far, a timeline of where time went) and, with a free CrUX key, <strong>field data</strong>: what real Chrome users experienced over 28 days for this URL and the whole site, phone or desktop, with a 25-week trend.</td></tr>
     <tr><td>Bot's eye</td><td>What six crawlers actually receive for this URL. See <a href="#bots">below</a>.</td></tr>
     <tr><td>Redirects &amp; headers</td><td>Any URL, hop by hop: status codes, Location, timing and every response header, as a browser or a crawler. Flags loops, long chains, temporary redirects and missing security headers.</td></tr>
-    <tr><td>Search Console</td><td>Google's own clicks, impressions, CTR, position and top queries for this URL, plus URL Inspection (indexed or not, last crawl, Google's chosen canonical). See <a href="#gsc">setup</a>.</td></tr>
+    <tr><td>Search Console</td><td>Google's own clicks, impressions, CTR, position and top queries for this URL, each compared with the previous 28 days (% change; position change in places, ▲ = moved up; queries new this period are marked), plus URL Inspection (indexed or not, last crawl, Google's chosen canonical). See <a href="#gsc">setup</a>.</td></tr>
     <tr><td>Bing Webmaster</td><td>Bing clicks, impressions and position for this URL, the site's top queries and inbound links.</td></tr>
     <tr><td>Crawl</td><td>Site-wide problems across up to 1,000 pages, optionally with JavaScript rendering, and what changed since the last crawl. See <a href="#crawl">below</a>.</td></tr>
     <tr><td>Rankings</td><td>Google positions for keywords you track; each check is stored so positions build a history.</td></tr>
@@ -124,7 +124,8 @@
 
   <h2 id="google">On Google results pages</h2>
   <ul>
-    <li>Each organic result gets a position number; <strong>Copy results CSV</strong> copies position, title and URL.</li>
+    <li>Each organic result gets a position number; <strong>Copy results CSV</strong> copies position, title, URL and how far down the page each result sits (pixels).</li>
+    <li>The <strong>SERP layout</strong> panel (bottom left) shows how far down the first organic result is, what's above it (ads, AI Overview, featured snippet, People Also Ask, local pack, videos and more), and whether an AI Overview is shown and which sites it links to. Type <strong>your domain</strong> to highlight your result, see its position, and check whether the AI Overview cites you. The block names are read from English Google; in other languages only the pixel figures are reliable.</li>
     <li><strong>Extract People Also Ask</strong> opens each question to collect its answer source, follows the questions Google adds, up to three levels deep (100 questions maximum), and exports to CSV.</li>
   </ul>
   <p>Both can be turned off in Settings.</p>
