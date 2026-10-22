@@ -39,6 +39,7 @@ export function analyseLocal(d) {
   const q = encodeURIComponent([name, where].filter(Boolean).join(' '))
   return {
     looksLocal, business: biz ? { name: biz.name ?? '', phone: biz.telephone ?? '', address: addr(biz.address), hours: biz.openingHours ?? null } : null,
+    geo: biz?.geo && Number.isFinite(Number(biz.geo.latitude)) && Number.isFinite(Number(biz.geo.longitude)) ? { lat: Number(biz.geo.latitude), lng: Number(biz.geo.longitude) } : null,
     sources, phones, checks, mapEmbeds: L.mapEmbeds, gbpLinks: L.gbpLinks,
     links: name ? [
       ['Find on Google Maps', `https://www.google.com/maps/search/?api=1&query=${q}`],
@@ -57,4 +58,13 @@ export function localIssues(d) {
   if (!a.business) out.push({ id: 'local.schema_missing', level: 'warn', section: 'Local SEO', msg: 'Looks like a local business page but has no LocalBusiness schema', fix: 'Add LocalBusiness (or a subtype) JSON-LD with name, address, telephone, geo and hours.' })
   if (a.phones.length > 1) out.push({ id: 'local.phone_mismatch', level: 'warn', section: 'Local SEO', msg: `${a.phones.length} different phone numbers on the page`, fix: 'Use one consistent number in schema, links and text (NAP consistency).' })
   return out
+}
+
+/** size×size points centred on lat,lng, spacingKm apart (1° latitude ≈ 110.574 km; longitude shrinks by cos(lat)). */
+export function gridPoints(lat, lng, size = 3, spacingKm = 1) {
+  const half = (size - 1) / 2, dLat = spacingKm / 110.574, dLng = spacingKm / (111.32 * Math.cos((lat * Math.PI) / 180))
+  return Array.from({ length: size * size }, (_, i) => {
+    const row = Math.floor(i / size), col = i % size
+    return { row, col, lat: +(lat + (half - row) * dLat).toFixed(6), lng: +(lng + (col - half) * dLng).toFixed(6) }
+  })
 }

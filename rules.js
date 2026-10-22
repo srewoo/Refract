@@ -9,7 +9,8 @@ export const SCHEMA_PROPS = {
   Article: [['headline'], ['image', 'datePublished', 'dateModified', 'author.name']],
   NewsArticle: [['headline'], ['image', 'datePublished', 'author.name']],
   BlogPosting: [['headline'], ['image', 'datePublished', 'dateModified', 'author.name']],
-  Product: [['name'], ['image', 'offers.price', 'offers.priceCurrency', 'offers.availability', 'review|aggregateRating']],
+  // Merchant listing fields (shipping, returns, identifiers, brand) are what Google Shopping surfaces read.
+  Product: [['name'], ['image', 'offers.price', 'offers.priceCurrency', 'offers.availability', 'review|aggregateRating', 'brand.name|brand', 'gtin|gtin8|gtin12|gtin13|gtin14|mpn|sku', 'offers.shippingDetails', 'offers.hasMerchantReturnPolicy']],
   BreadcrumbList: [['itemListElement'], ['itemListElement.name', 'itemListElement.item']],
   Recipe: [['name', 'recipeIngredient|recipeInstructions'], ['image', 'author.name', 'cookTime', 'recipeYield']],
   VideoObject: [['name', 'thumbnailUrl|thumbnail', 'uploadDate'], ['description', 'duration', 'contentUrl|embedUrl']],
@@ -20,6 +21,18 @@ export const SCHEMA_PROPS = {
   SoftwareApplication: [['name', 'offers|aggregateRating'], ['applicationCategory', 'operatingSystem']],
 }
 
+/** Rich results Google retired, with the date and what to do instead (developers.google.com/search, checked 2026-09). */
+export const RETIRED = [
+  ['FAQPage', '7 May 2026', 'Keep it only if other consumers use it; use QAPage for genuine single-question pages. Don’t add FAQPage for Google.'],
+  ['HowTo', 'September 2023', 'No replacement. Clear H2 step headings help readers; the markup no longer changes results.'],
+  ['SpecialAnnouncement', 'July 2025', 'Use Event if it is time-bound, otherwise Article or WebPage.'],
+  ['ClaimReview', 'June 2025', 'No Search replacement; keep it only for Google Fact Check Explorer.'],
+  ['VehicleListing', 'June 2025', 'Use Product with vehicle properties if the car is sold online.'],
+  ['EstimatedSalary', 'June 2025', 'Use JobPosting with baseSalary for specific roles.'],
+  ['OccupationalAggregateRating', 'June 2025', 'No replacement.'],
+  ['LearningVideo', 'June 2025', 'Use VideoObject, which still shows video results.'],
+  ['PracticeProblem', 'January 2026', 'No replacement.'],
+]
 const SEARCH_BOTS = ['OAI-SearchBot', 'ChatGPT-User', 'PerplexityBot', 'Claude-SearchBot']
 const TRAINING_BOTS = ['GPTBot', 'ClaudeBot', 'CCBot', 'Google-Extended', 'Applebot-Extended']
 const GENERIC_ANCHOR = /^(click here|here|read more|learn more|more|this|link|continue|details|go|this page)$/i
@@ -134,8 +147,8 @@ export function rules(d) {
   if (p.inp > 200) add('perf.inp_slow', p.inp > 500 ? 'bad' : 'warn', 'Speed', `Slowest interaction so far: ${p.inp} ms (good ≤ 200 ms)`, 'Break up long tasks in click/key handlers.')
   // ---- links
   const generic = d.links.filter((l) => GENERIC_ANCHOR.test(l.text)).length
-  if (generic) add('links.generic_anchor', 'warn', 'Links', `${generic} link${generic > 1 ? 's use' : ' uses'} generic text ("click here", "read more")`, 'Describe the destination in the anchor.')
-  if (!d.links.some((l) => l.internal)) add('links.no_internal', 'warn', 'Links', 'No internal links', 'Link to related pages so crawlers and users can continue.')
+  if (generic) add('links.generic_anchor', 'warn', 'On-page links', `${generic} link${generic > 1 ? 's use' : ' uses'} generic text ("click here", "read more")`, 'Describe the destination in the anchor.')
+  if (!d.links.some((l) => l.internal)) add('links.no_internal', 'warn', 'On-page links', 'No internal links', 'Link to related pages so crawlers and users can continue.')
   // ---- social
   const ogImg = d.social['og:image']
   if (ogImg && !/^https?:\/\//i.test(ogImg)) add('og.image_not_absolute', 'warn', 'Social', 'og:image is a relative URL', 'Most scrapers need an absolute URL.')
@@ -154,7 +167,8 @@ export function rules(d) {
   const types = d.schema.types
   if (types.includes('Organization') && !nodes.some((n) => [].concat(n['@type']).includes('Organization') && hasPath(n, 'sameAs'))) add('schema.no_sameas', 'warn', 'Schema', 'Organization has no sameAs profiles', 'Link official profiles so engines resolve the entity.')
   if (types.length && path !== '/' && !types.includes('BreadcrumbList')) add('schema.no_breadcrumb', 'warn', 'Schema', 'No BreadcrumbList on an inner page', 'Breadcrumbs replace the URL in results.')
-  for (const t of ['FAQPage', 'HowTo']) if (types.includes(t)) add(`schema.${t.toLowerCase()}.deprecated`, 'warn', 'Schema', `${t} rich results are retired for most sites`, 'Keep the markup if useful for AI answers, but expect no rich result.')
+  if (d.hiddenChars > 0) add('content.hidden_chars', 'warn', 'Content', `${d.hiddenChars} invisible character${d.hiddenChars > 1 ? 's' : ''} in the page text`, 'Zero-width and direction-control characters usually come from AI tools or copy-paste. Remove them from the source text.')
+  for (const [t, when, instead] of RETIRED) if (types.includes(t)) add('schema.retired', 'warn', 'Schema', `${t} no longer produces a Google rich result (retired ${when})`, instead)
   // ---- hreflang
   if (d.hreflang.length) {
     if (d.hreflang.some((x) => !LANG_OK(x.lang))) add('hreflang.invalid_code', 'bad', 'Hreflang', 'Invalid hreflang code', 'Use ISO 639-1 language (+ optional ISO 3166 region) or x-default.')

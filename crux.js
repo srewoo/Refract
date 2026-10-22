@@ -28,8 +28,11 @@ export function parseRecord(json) {
     const dens = (m.histogram ?? []).map((b) => b.density ?? 0)
     out[k] = { ...spec, p75, good: dens[0] ?? 0, ni: dens[1] ?? 0, poor: dens[2] ?? 0, status: p75 <= spec.good ? 'good' : p75 <= spec.poor ? 'warn' : 'bad' }
   }
+  // LCP sub-parts (image LCPs only): where the p75 LCP time goes. Returned whenever no metrics filter is sent.
+  const sub = (k) => { const v = Number(json.record.metrics?.[`largest_contentful_paint_image_${k}`]?.percentiles?.p75); return Number.isFinite(v) ? v : null }
+  const lcpParts = { ttfb: sub('time_to_first_byte'), loadDelay: sub('resource_load_delay'), loadDuration: sub('resource_load_duration'), renderDelay: sub('element_render_delay') }
   const p = json.record.collectionPeriod
-  return { metrics: out, period: p ? `${p.firstDate.year}-${String(p.firstDate.month).padStart(2, '0')}-${String(p.firstDate.day).padStart(2, '0')} → ${p.lastDate.year}-${String(p.lastDate.month).padStart(2, '0')}-${String(p.lastDate.day).padStart(2, '0')}` : '' }
+  return { metrics: out, lcpParts: Object.values(lcpParts).some((v) => v != null) ? lcpParts : null, period: p ? `${p.firstDate.year}-${String(p.firstDate.month).padStart(2, '0')}-${String(p.firstDate.day).padStart(2, '0')} → ${p.lastDate.year}-${String(p.lastDate.month).padStart(2, '0')}-${String(p.lastDate.day).padStart(2, '0')}` : '' }
 }
 
 /** Pure: weekly p75 series for LCP / INP / CLS. */

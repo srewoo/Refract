@@ -7,8 +7,12 @@ import { probeGlobals, probeSite } from './probe.js'
 import { h, ring, btn } from './ui.js'
 import { BotsEye } from './views-bots.js'
 import { Crawl } from './views-crawl.js'
-import { Backlinks, Rankings } from './views-data.js'
+import { Rankings } from './views-data.js'
+import { Backlinks } from './views-backlinks.js'
+import { AiVisibility } from './views-ai.js'
 import { Compare } from './views-compare.js'
+import { Competitors } from './views-competitors.js'
+import { Research } from './views-research.js'
 import { Local, Redirects } from './views-extra.js'
 import { History } from './views-history.js'
 import { Bing, SearchConsole } from './views-webmaster.js'
@@ -19,9 +23,9 @@ import * as site from './views-site.js'
 
 // Grouped so ~25 sections stay scannable: what's on the page, how crawlers see it, the whole site, and your workflow.
 const GROUPS = {
-  Page: { Overview: page.Overview, Issues: page.Issues, Opportunities, 'AI search': page.GEO, Content: page.Content, Keywords: page.Keywords, Links: site.Links, Images: site.Images, Schema: site.Schema, Social: site.Social, Hreflang: site.Hreflang, 'Local SEO': Local, Speed: page.Speed },
+  Page: { Overview: page.Overview, Issues: page.Issues, Opportunities, 'AI search': page.GEO, Content: page.Content, 'On-page terms': page.Keywords, 'On-page links': site.Links, Images: site.Images, Schema: site.Schema, Social: site.Social, Hreflang: site.Hreflang, 'Local SEO': Local, Speed: page.Speed },
   Crawlers: { "Bot's eye": BotsEye, 'Redirects & headers': Redirects },
-  Site: { 'Search Console': SearchConsole, 'Bing Webmaster': Bing, Crawl, Rankings, Backlinks, Domain: site.Domain, 'Ads & tags': site.Tags },
+  Site: { 'Search Console': SearchConsole, 'Bing Webmaster': Bing, Crawl, 'Keyword research': Research, Rankings, Competitors, Backlinks, 'AI visibility': AiVisibility, Domain: site.Domain, 'Ads & tags': site.Tags },
   Workflow: { History, Compare, Tools: site.Tools, Settings: site.Settings },
 }
 const VIEWS = Object.assign({}, ...Object.values(GROUPS))
@@ -35,7 +39,7 @@ async function main() {
   const qs = params.get('tabId') // set by side panel / full screen paths and the e2e tests
   const tab = qs ? await chrome.tabs.get(Number(qs)) : (await chrome.tabs.query({ active: true, currentWindow: true }))[0]
 
-  let current = params.get('view') ?? 'Overview'
+  let current = site.viewName(params.get('view') ?? 'Overview')
   const surfaceUrl = (v, extra) => `popup.html?tabId=${tab.id}&${extra}${v ? `&view=${encodeURIComponent(v)}` : ''}`
   const openFull = (v) => { chrome.tabs.create({ url: surfaceUrl(v ?? current, 'full=1'), index: tab.index + 1 }); if (mode === 'popup') window.close() }
   const popOut = () => { chrome.windows.create({ url: surfaceUrl(current, 'full=1'), type: 'popup', width: 1200, height: 860 }); if (mode === 'popup') window.close() }
@@ -80,7 +84,8 @@ async function main() {
   if (data.agent) siteEl.after(h('div', { class: 'banner', role: 'status' }, `Viewing as ${data.agent}`, h('button', { class: 'btn', type: 'button', onclick: () => setAgent(tab.id, null).then(() => mode === 'popup' ? window.close() : location.reload()) }, 'Back to normal')))
   document.getElementById('docs').replaceChildren(h('a', { href: 'help.html', target: '_blank' }, 'Help'), h('a', { href: 'privacy.html', target: '_blank' }, 'Privacy'))
 
-  const go = (name) => {
+  const go = (asked) => {
+    const name = site.viewName(asked)
     current = name
     nav.querySelectorAll('button').forEach((b) => b.setAttribute('aria-current', String(b.dataset.view === name)))
     view.replaceChildren(...[VIEWS[name].render(data, { go, views: Object.keys(VIEWS), mode, openFull })].flat(Infinity).filter((x) => x != null && x !== ''))
@@ -99,7 +104,7 @@ async function main() {
     e.preventDefault()
   })
   const { startView } = await chrome.storage.sync.get(site.DEFAULTS)
-  const want = params.get('view') ?? startView
+  const want = site.viewName(params.get('view') ?? startView)
   go(VIEWS[want] ? want : 'Overview')
 }
 

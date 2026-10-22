@@ -28,6 +28,11 @@ assert.deepEqual(ops.map((o) => [o.query, o.kind]), [['waterproof trail shoes', 
 assert.equal(ops[0].gain, Math.round(400 * (0.11 - 6 / 400)))
 assert.ok(ops[0].actions.some((a) => /title/.test(a)) && ops[0].actions.some((a) => /waterproof/.test(a)), 'striking actions name the missing title + words')
 assert.equal(ops[2].gain, 17)
+// new queries: flagged only when the previous period had data and the query wasn't in it
+const fresh = queryOpps([row('waterproof trail shoes', 6, 400, 7.2), row('trail shoe sizing', 9, 90, 5, { clicks: 8, position: 6 })], d, { hadPrevious: true })
+assert.deepEqual(fresh.map((o) => [o.query, !!o.fresh]), [['waterproof trail shoes', true], ['trail shoe sizing', false]])
+assert.match(fresh[0].why, /^New this period\. /)
+assert.ok(queryOpps([row('waterproof trail shoes', 6, 400, 7.2)], d).every((o) => !o.fresh), 'no previous-period data: nothing is new')
 
 // --- AI Overview observations: latest per query, only where it doesn't cite you, only this domain
 const obs = [
@@ -56,7 +61,7 @@ assert.match(plan(d.url, all), /^# SEO opportunities: https:\/\/shop\.example\.c
 // --- How to fix: every check the engine can raise has a fix (except ones with no code-level fix)
 const ruleIds = [...readFileSync('rules.js', 'utf8').matchAll(/add\(['`]([a-z_.$`{}A-Z()]+?)['`],/g)].map((m) => m[1]).filter((id) => !id.includes('$'))
 const kinds = [...readFileSync('analyze.js', 'utf8').matchAll(/, '([a-z_.]+)'\)$/gm)].map((m) => m[1])
-const NO_FIX = new Set(['robots.noarchive', 'perf.inp_slow', 'schema.faqpage.deprecated', 'schema.howto.deprecated', 'canonical.og_url_mismatch'])
+const NO_FIX = new Set(['robots.noarchive', 'perf.inp_slow', 'schema.retired', 'content.hidden_chars', 'canonical.og_url_mismatch'])
 const missing = [...ruleIds.map((id) => ({ id })), ...kinds.map((kind) => ({ kind }))].filter((i) => !NO_FIX.has(i.id) && !kindOf(i))
 assert.deepEqual(missing, [], 'every issue maps to a fix')
 assert.ok(ruleIds.length > 40 && kinds.length >= 15, `found ${ruleIds.length} rule ids, ${kinds.length} kinds`)

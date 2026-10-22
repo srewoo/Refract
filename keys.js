@@ -15,12 +15,33 @@ export const PROVIDERS = {
     flows: [['Your API key and the URL and origin of a page you audit', 'Google (chromeuxreport.googleapis.com)', 'When you open Speed.']] },
   dataforseo: { name: 'DataForSEO', auth: 'key', price: 'Pay-as-you-go (your account)', hosts: ['api.dataforseo.com'], origins: ['https://api.dataforseo.com/*'], can: ['ranks', 'keywords', 'backlinks'], fields: [['login', 'API login'], ['password', 'API password']],
     note: 'Backlinks API is a separate monthly subscription.',
-    flows: [['Your login, the site’s domain, the keywords you track or the page’s top phrases, and your market', 'DataForSEO (api.dataforseo.com)', 'Only when you press Check positions, Get volume & difficulty or Fetch backlinks.']] },
+    flows: [['Your login, the site’s domain, competitor domains you compare, the keywords you track, the page’s top phrases or the seed keyword you research, and your market', 'DataForSEO (api.dataforseo.com)', 'Only when you press Check positions, Get volume & difficulty, Find keywords, Get metrics, Compare keywords, Get overview, Fetch backlinks or Load backlinks.'], ['The AI visibility prompts you run', 'DataForSEO, which sends them to Google, OpenAI (ChatGPT) or Perplexity for the engines you pick', 'Only when you press Run on a prompt.']] },
   semrush: { name: 'Semrush', auth: 'key', price: 'API units (Business plan or API add-on)', hosts: ['api.semrush.com', 'www.semrush.com'], origins: ['https://api.semrush.com/*', 'https://www.semrush.com/*'], can: ['ranks', 'keywords', 'backlinks'], fields: [['key', 'API key']],
-    flows: [['Your API key, the site’s domain, the page’s top phrases and your market', 'Semrush (api.semrush.com)', 'Only when you press Check positions, Get volume & difficulty or Fetch backlinks.'], ['Your API key, to read remaining units', 'Semrush (www.semrush.com)', 'When you press Save & test.']] },
+    flows: [['Your API key, the site’s domain, competitor domains you compare, the page’s top phrases or the seed keyword you research, and your market', 'Semrush (api.semrush.com)', 'Only when you press Check positions, Get volume & difficulty, Find keywords, Get metrics, Compare keywords, Get overview, Fetch backlinks or Load backlinks.'], ['Your API key, to read remaining units', 'Semrush (www.semrush.com)', 'When you press Save & test.']] },
   ahrefs: { name: 'Ahrefs', auth: 'key', price: 'API units (Enterprise plan or API add-on)', hosts: ['api.ahrefs.com'], origins: ['https://api.ahrefs.com/*'], can: ['ranks', 'keywords', 'backlinks'], fields: [['key', 'API key (v3)']],
-    flows: [['Your API key, the site’s domain, the page’s top phrases and your market', 'Ahrefs (api.ahrefs.com)', 'Only when you press Check positions, Get volume & difficulty or Fetch backlinks.']] },
+    flows: [['Your API key, the site’s domain, competitor domains you compare, the page’s top phrases and your market', 'Ahrefs (api.ahrefs.com)', 'Only when you press Check positions, Get volume & difficulty, Get metrics, Compare keywords, Get overview, Fetch backlinks or Load backlinks.']] },
 }
+// Key-based connectors outside the three capabilities above (no `can`), plus Moz for backlinks.
+Object.assign(PROVIDERS, {
+  moz: { name: 'Moz', auth: 'key', price: 'Moz API plan (rows)', hosts: ['api.moz.com'], origins: ['https://api.moz.com/*'], can: ['backlinks'], fields: [['key', 'API token (or access ID:secret key)']],
+    note: 'Moz lists Domain Authority, Page Authority, spam score and referring domains; it has no list of individual links.',
+    flows: [['Your token and the domain whose backlinks you fetch (yours or a competitor’s)', 'Moz (api.moz.com)', 'Only when you press Fetch backlinks, and once when you press Save & test.']] },
+  pagespeed: { name: 'PageSpeed Insights (Lighthouse)', auth: 'key', price: 'Free (Google API quota)', hosts: ['www.googleapis.com'], origins: ['https://www.googleapis.com/*'], can: [], fields: [['key', 'Google API key (PageSpeed Insights API enabled)']],
+    note: 'The same Google Cloud key as Chrome UX Report works if both APIs are enabled on it.',
+    flows: [['Your API key and the URL to test', 'Google (www.googleapis.com), which loads the page from its own servers', 'Only when you press Run Lighthouse, or Lighthouse on crawled pages.']] },
+  openpagerank: { name: 'Open PageRank', auth: 'key', price: 'Free key (monthly domain quota)', hosts: ['openpagerank.keywordseverywhere.com'], origins: ['https://openpagerank.keywordseverywhere.com/*'], can: [], fields: [['key', 'API key (keywordseverywhere.com › Account › Open PageRank)']],
+    note: 'From 1 November 2026, free keys only work from the IP address set on that account page.',
+    flows: [['Your key and the domains you compare (yours and your competitors’)', 'Keywords Everywhere (openpagerank.keywordseverywhere.com)', 'Only when you press Check authority.']] },
+  naturallanguage: { name: 'Google Cloud Natural Language', auth: 'key', price: 'Free monthly tier, then paid per 1,000 characters', hosts: ['language.googleapis.com'], origins: ['https://language.googleapis.com/*'], can: [], fields: [['key', 'Google API key (Cloud Natural Language API enabled)']],
+    note: 'This is the one connector that sends page text: up to the first 20,000 characters, only when you press Analyse entities.',
+    flows: [['Your API key and the visible text of the page you analyse (up to 20,000 characters)', 'Google (language.googleapis.com)', 'Only when you press Analyse entities.']] },
+  indexnow: { name: 'IndexNow', auth: 'key', price: 'Free', hosts: ['api.indexnow.org'], origins: ['https://api.indexnow.org/*'], can: [], fields: [['key', 'Your IndexNow key (8–128 letters, digits or dashes)']],
+    note: 'Host a text file named <key>.txt containing the key at the root of each site you submit. Bing, Yandex, Seznam, Naver and Yep use IndexNow; Google does not.',
+    flows: [['Your key, the site’s host and the URLs you submit', 'IndexNow (api.indexnow.org), shared with participating search engines', 'Only when you press Submit to IndexNow.']] },
+  ga4: { name: 'Google Analytics 4', auth: 'google', price: 'Free', hosts: ['analyticsadmin.googleapis.com', 'analyticsdata.googleapis.com'], can: [], fields: [],
+    note: 'Uses its own read-only Analytics permission. Refract SEO’s Google Cloud project must list the analytics.readonly scope on its OAuth consent screen, and your account must be a test user while the app is in Testing.',
+    flows: [['The list of GA4 properties your Google account can see', 'Google (analyticsadmin.googleapis.com)', 'When you open Search Console › Google Analytics.'], ['A request for Organic Search landing pages of the property you pick (read-only)', 'Google (analyticsdata.googleapis.com)', 'When you press Load organic landing pages.']] },
+})
 export const CAPABILITIES = { ranks: 'Rank tracking', keywords: 'Keyword volume & difficulty', backlinks: 'Backlinks' }
 
 // One market setting maps onto each provider's own location vocabulary.

@@ -4,6 +4,7 @@ import { analyseCrawl, crawl, CRAWL_CAP, DEPTH_CAP, sitemapUrls } from './crawl.
 import { diffCrawls } from './history.js'
 import { renderer, withWorkerTab } from './render.js'
 import { h, head, block, btn, ext, num, bars, stack, tag, download } from './ui.js'
+import { crawlExtras } from './views-crawl-extra.js'
 
 const HOSTS = { origins: ['<all_urls>'] }
 const STOPPED = {
@@ -18,7 +19,8 @@ const short = (u, origin) => u.replace(origin, '') || '/'
 
 export const Crawl = {
   name: 'Crawl',
-  render(d, { mode, openFull }) {
+  render(d, ctx) {
+    const { mode, openFull } = ctx
     const origin = new URL(d.url).origin
     if (mode === 'popup') return [head('Site crawl', `Crawls up to ${num(CRAWL_CAP)} pages of ${new URL(d.url).host} to find broken links, duplicates, orphans and more. Runs in a full-screen tab so it keeps going while you work.`, btn('Open full screen to crawl', () => openFull('Crawl')))]
     const out = h('div', {}, h('p', { class: 'empty' }, 'No crawl yet for this site. Start one to see site-wide issues.'))
@@ -46,10 +48,10 @@ export const Crawl = {
       delete document.body.dataset.busy
       e.target.disabled = false; stop.hidden = true; progress.hidden = true
       status.textContent = ''
-      out.replaceChildren(...report(saved, origin))
+      out.replaceChildren(...report(saved, origin, ctx))
     }, { class: 'btn primary' })
     const stop = btn('Stop', () => ctl?.abort(), { hidden: true })
-    chrome.storage.local.get(key(origin)).then((s) => { if (s[key(origin)]) out.replaceChildren(...report(s[key(origin)], origin)) })
+    chrome.storage.local.get(key(origin)).then((s) => { if (s[key(origin)]) out.replaceChildren(...report(s[key(origin)], origin, ctx)) })
     return [
       head('Site crawl', `Up to ${num(CRAWL_CAP)} pages of ${new URL(d.url).host}, depth ≤ ${DEPTH_CAP}: same site only, obeys robots.txt, no cookies, one request at a time.`, start, stop),
       options, progress, status,
@@ -58,7 +60,7 @@ export const Crawl = {
   },
 }
 
-function report(saved, origin) {
+function report(saved, origin, ctx) {
   const { result, sitemap } = saved
   const a = analyseCrawl(result, sitemap)
   const n = result.pages.length
@@ -92,6 +94,7 @@ function report(saved, origin) {
     list('Thin pages (< 300 words)', a.thin, (r) => [link(r.url), h('td', { class: 'mono nowrap' }, num(r.words))]),
     list('Slow responses (> 1.5 s)', a.slow, (r) => [link(r.url), h('td', { class: 'mono nowrap' }, `${r.ms} ms`)]),
     list(`Deeper than 3 clicks`, a.deep, (r) => [link(r.url), h('td', { class: 'mono nowrap' }, `depth ${r.depth}`)]),
+    ...crawlExtras(saved, origin, ctx),
   ]
 }
 

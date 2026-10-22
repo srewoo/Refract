@@ -106,3 +106,24 @@ export function schemaTree(jsonLd) {
   jsonLd.filter((j) => j.ok).forEach((j) => walk(j.data, 0, null))
   return out
 }
+
+const SOCIAL = /(facebook|instagram|linkedin|twitter|x|youtube|tiktok|pinterest|github|threads)\.com\//i
+/** Who / how / why signals readers and quality raters look for (Google's helpful-content questions). Each: { ok, label, hint }. */
+export function eeatSignals(d) {
+  const links = d.links ?? [], internal = links.filter((l) => l.internal), has = (re) => internal.some((l) => re.test(`${l.href} ${l.text}`))
+  const types = d.schema?.types ?? []
+  const cites = links.filter((l) => !l.internal && !l.nofollow && !l.sponsored && !SOCIAL.test(l.href)).length
+  const s = (ok, label, hint) => ({ ok, label, hint })
+  return [
+    s(!!d.author || types.includes('Person'), d.author ? `Author named: ${d.author}` : 'Author named', 'Show who wrote it (byline + Person in Article schema).'),
+    s(has(/\/(authors?|team|people|staff|about-?(me|us)?)\b|rel=author/i) || links.some((l) => /\/authors?\//i.test(l.href)), 'Links to an author or team page', 'Link the byline to a page showing the author’s credentials.'),
+    s(has(/\babout\b/i), 'Links to an About page', 'Say who is behind the site.'),
+    s(has(/\bcontact\b/i), 'Links to a Contact page', 'Give readers a way to reach you; trust starts here.'),
+    s(has(/privacy/i), 'Links to a privacy policy', 'Expected on any site that collects data.'),
+    s(!!(d.structure?.published || d.structure?.modified), d.structure?.modified ? `Updated ${d.structure.modified.slice(0, 10)}` : d.structure?.published ? `Published ${d.structure.published.slice(0, 10)}` : 'Shows a date', 'Show when it was published and last updated.'),
+    s(cites >= 2, `${cites} followed links to other sites (sources)`, 'Cite primary sources for facts and numbers.'),
+    s(types.some((t) => /Organization|LocalBusiness/.test(t)), 'Identifies the organisation in schema', 'Add Organization schema with sameAs profiles.'),
+    s(new URL(d.url).protocol === 'https:', 'Served over HTTPS', 'Serve every page over HTTPS.'),
+    s(!(d.hiddenChars > 0), d.hiddenChars > 0 ? `${d.hiddenChars} invisible characters in the text` : 'No invisible characters in the text', 'Zero-width and direction-control characters often come from AI tools or copy-paste; remove them.'),
+  ]
+}

@@ -59,7 +59,7 @@ await popup.setViewportSize({ width: 780, height: 590 })
 const nav = (v) => popup.locator(`nav [data-view="${v}"]`)
 await nav('Overview').waitFor()
 console.log('nav:', (await popup.locator('nav').innerText()).replace(/\s+/g, ' '))
-for (const v of ['Overview', 'Issues', 'AI search', 'Content', 'Keywords', 'Links', 'Images', 'Schema', 'Social', 'Hreflang', 'Speed', 'Ads & tags', 'Domain', 'Tools', 'Settings']) {
+for (const v of ['Overview', 'Issues', 'AI search', 'Content', 'On-page terms', 'On-page links', 'Images', 'Schema', 'Social', 'Hreflang', 'Speed', 'Ads & tags', 'Domain', 'Tools', 'Settings']) {
   await nav(v).click()
   if (v === 'Domain') await popup.waitForTimeout(4000)
   console.log(`${v}: ${(await popup.locator('main').innerText()).replace(/\s+/g, ' ').slice(0, 150)}`)
@@ -110,7 +110,7 @@ console.log('side panel options:', JSON.stringify(await sw0.evaluate(async (t) =
 popup = await ctx.newPage() // "Open in side panel" closes the popup by design
 await popup.goto(`chrome-extension://${id}/popup.html?tabId=${tid}`)
 popup.on('pageerror', e => errors.push(String(e)))
-await nav('Links').click()
+await nav('On-page links').click()
 await popup.getByRole('button', { name: 'Highlight nofollow' }).click()
 await page.waitForFunction(() => !!document.getElementById('sss-overlay-nofollow'))
 console.log('nofollow outline:', await page.evaluate(() => getComputedStyle(document.querySelector('a[rel=nofollow]')).outlineStyle))

@@ -167,6 +167,9 @@ globalThis.__sssCollect = async (doc, loc) => {
     textSample: bodyText.slice(0, 4000), // AI grounding: the only page text a model ever sees
     words: words.slice(0, 50000), // ponytail: density on first 50k words; enough for any real page
     wordCount: words.length,
+    // Zero-width and bidi control characters: invisible in the page, left behind by AI tools and copy-paste pipelines.
+    hiddenChars: (bodyText.match(/[\u200B-\u200D\u2060\uFEFF\u202A-\u202E\u2066-\u2069]/g) ?? []).length,
+    bodyText: bodyText.slice(0, 20000), // for on-request entity analysis (Content › Natural Language)
     robotsTxt,
     llmsTxt,
     favicon: doc.querySelector('link[rel~="icon" i]')?.href ?? `${loc.origin}/favicon.ico`,

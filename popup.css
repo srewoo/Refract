@@ -70,6 +70,7 @@ select { font: inherit; padding: 4px 6px; border: 1px solid var(--rule); border-
 .tag.good i { background: var(--good); } .tag.good i::before { content: "✓"; }
 .tag.warn i { background: var(--warn); color: #1c1d1f; } .tag.warn i::before { content: "!"; }
 .tag.bad i { background: var(--bad); } .tag.bad i::before { content: "✕"; }
+.tag.info i { background: var(--ink-3); } .tag.info i::before { content: "i"; }
 
 /* key/value */
 .kv { display: grid; grid-template-columns: 128px 1fr; margin: 0 0 18px; }
@@ -146,6 +147,7 @@ select { font: inherit; padding: 4px 6px; border: 1px solid var(--rule); border-
 .chart .axis { fill: var(--ink-3); font: 10.5px var(--mono); }
 .chart .line { fill: none; stroke: var(--c1); stroke-width: 2; stroke-linejoin: round; }
 .chart .cross { stroke: var(--ink-3); stroke-dasharray: 3 3; }
+.chart.spark { width: auto; display: inline-block; vertical-align: middle; } .chart.spark .line { stroke-width: 1.5; }
 .chart .line-dot { fill: var(--c1); stroke: var(--paper); stroke-width: 2; }
 .tip { position: absolute; top: -4px; transform: translateX(-50%); background: var(--ink); color: var(--paper); font: 11.5px var(--mono); padding: 3px 7px; border-radius: 4px; pointer-events: none; white-space: nowrap; }
 
@@ -178,6 +180,9 @@ select { font: inherit; padding: 4px 6px; border: 1px solid var(--rule); border-
 .ssr-fill.st-good { background: var(--good); } .ssr-fill.st-warn { background: var(--warn); } .ssr-fill.st-bad { background: var(--bad); }
 .chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; max-height: 160px; overflow: auto; }
 .chips li { padding: 2px 7px; border: 1px solid var(--rule); border-radius: 4px; font-size: 12px; }
+.chip-x { all: unset; cursor: pointer; margin-left: 6px; color: var(--ink-3); } .chip-x:hover, .chip-x:focus-visible { color: var(--bad); }
+.ai-result { border-top: 1px solid var(--rule); padding: 8px 0; } .ai-text { white-space: pre-wrap; max-height: 320px; overflow: auto; }
+.cell-input { font: 12px var(--mono); padding: 3px 5px; border: 1px solid var(--rule); border-radius: 4px; background: var(--raise); color: var(--ink); width: 100%; min-width: 110px; }
 .seg-ctl { display: flex; gap: 0; margin: 0 0 10px; border: 1px solid var(--rule); border-radius: 4px; width: fit-content; overflow: hidden; }
 .seg-ctl button { all: unset; cursor: pointer; padding: 5px 12px; font-size: 12px; color: var(--ink-2); display: flex; gap: 6px; align-items: baseline; text-transform: capitalize; }
 .seg-ctl button + button { border-left: 1px solid var(--rule); }
@@ -293,7 +298,7 @@ fieldset.provider legend { font-weight: 600; padding: 0 4px; }
 .crux-h { display: flex; gap: 10px; align-items: center; }
 .crux-h b { width: 38px; }
 .split3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-.kd { display: inline-flex; align-items: center; gap: 6px; }
+.kd { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .kd i { display: inline-block; height: 6px; border-radius: 3px; min-width: 2px; max-width: 60px; }
 .kd i.st-good { background: var(--good); } .kd i.st-warn { background: var(--warn); } .kd i.st-bad { background: var(--bad); }
 .stats-row { display: flex; gap: 22px; margin-bottom: 14px; flex-wrap: wrap; }
@@ -357,3 +362,8 @@ details.howto pre.code-block { margin: 0; white-space: pre; }
 .opp p { margin: 6px 0; }
 .opp-actions { margin: 0; padding-left: 18px; font-size: 12px; display: grid; gap: 3px; }
 .opp-sources { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+
+.geogrid { display: grid; gap: 4px; max-width: 260px; margin: 8px 0; }
+.geogrid .gg { aspect-ratio: 1; display: grid; place-items: center; border-radius: 4px; font: 600 12px var(--mono); color: #fff; }
+.geogrid .gg.st-good { background: var(--good); } .geogrid .gg.st-warn { background: var(--warn); color: #1c1d1f; } .geogrid .gg.st-bad { background: var(--bad); }
+pre.code-out { margin: 6px 0 10px; padding: 10px; font: 11px/1.5 var(--mono); max-height: 320px; overflow: auto; border: 1px solid var(--rule); border-radius: 6px; background: var(--rail); white-space: pre; }

@@ -125,6 +125,14 @@ export function lineChart(points, { width = 560, height = 150, fmt = num, invert
       onpointerleave: () => { tip.hidden = true; cross.setAttribute('visibility', 'hidden'); dot.setAttribute('visibility', 'hidden') } }))
   return h('div', { class: 'chart-wrap' }, svg, tip)
 }
+/** Tiny axis-less trend line for a table cell (e.g. 12 months of search volume). */
+export function spark(values, { width = 72, height = 18 } = {}) {
+  const v = values.filter((x) => x != null)
+  if (v.length < 2) return h('span', { class: 'muted' }, '—')
+  const lo = Math.min(...v), span = Math.max(...v) - lo || 1
+  return s('svg', { viewBox: `0 0 ${width} ${height}`, width, height, class: 'chart spark', role: 'img', 'aria-label': `Trend over ${v.length} months: ${num(v[0])} to ${num(v.at(-1))}` },
+    s('polyline', { class: 'line', points: v.map((x, i) => `${((i / (v.length - 1)) * width).toFixed(1)},${(height - 1 - ((x - lo) / span) * (height - 2)).toFixed(1)}`).join(' ') }))
+}
 export const rankLine = (points, o = {}) => lineChart(points.map((p) => ({ date: p.date, value: p.rank })), { ...o, invert: true, fmt: (v) => `#${num(Math.round(v))}`, label: 'Rank' })
 
 /** Gantt-style timeline rows on one shared ms axis, with optional vertical markers (e.g. LCP). */

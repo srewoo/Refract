@@ -8,7 +8,7 @@ import { h, head, block, tag, btn, num } from './ui.js'
 
 const HOSTS = { origins: ['<all_urls>'] }
 
-async function audit(tabId, url) {
+export async function audit(tabId, url) {
   await loadIn(tabId, url, { settleMs: 1200 })
   const [{ result: d }] = await chrome.scripting.executeScript({ target: { tabId }, files: ['collect.js'] })
   const [{ result: g }] = await chrome.scripting.executeScript({ target: { tabId }, world: 'MAIN', func: probeGlobals }).catch(() => [{ result: {} }])

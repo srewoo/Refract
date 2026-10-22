@@ -1,5 +1,6 @@
 // Google Search Console and Bing Webmaster Tools views, plus their Settings block.
 import { bingForPage } from './bing.js'
+import { ga4Block, indexNowPageBlock } from './views-ga4.js'
 import { GSC_PERMS, TEST_USER_MSG, change, inspect, listSites, oauthProblem, pagePerformance, pickProperty, signIn, signOut, token } from './gsc.js'
 import { loadKeys } from './keys.js'
 import { h, head, block, kv, tag, btn, num, lineChart, ext } from './ui.js'
@@ -55,7 +56,7 @@ export const SearchConsole = {
       } catch (e) { out.replaceChildren(h('div', { class: 'empty' }, h('p', {}, e.message), /403|denied|verification/i.test(e.message) ? h('p', { class: 'small' }, TEST_USER_MSG) : '')) }
     }
     load()
-    return [head('Search Console', 'Google’s own data for this URL: clicks, impressions, queries and index status.'), notice(), out]
+    return [head('Search Console', 'Google’s own data for this URL: clicks, impressions, queries and index status.'), notice(), out, ga4Block(d)]
   },
 }
 
@@ -90,6 +91,6 @@ export const Bing = {
           block(`Inbound links to this page (${r.inbound.length}${r.inboundPages > 1 ? '+' : ''})`, r.inbound.length ? h('div', { class: 'scroll-x crawl-list' }, h('table', {}, h('tbody', {}, r.inbound.map((l) => h('tr', {}, h('td', { class: 'mono small' }, ext(l.source)), h('td', { class: 'small' }, l.anchor ?? '')))))) : note('Bing reports no inbound links to this URL.')))
       } catch (e) { out.replaceChildren(h('p', { class: 'empty' }, e.message)) }
     })
-    return [head('Bing Webmaster', 'Bing’s data for this URL: clicks, impressions, top queries and inbound links.'), out]
+    return [head('Bing Webmaster', 'Bing’s data for this URL: clicks, impressions, top queries and inbound links.'), out, indexNowPageBlock(d, { go })]
   },
 }

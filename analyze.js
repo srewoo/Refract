@@ -50,7 +50,7 @@ export function issues(d) {
   if (!d.social['og:title'] && !d.social['og:image']) add('warn', 'No Open Graph tags', 'Social', 'social')
   if (!d.schema.types.length && !d.schema.microdata.length) add('warn', 'No structured data', 'Schema', 'schema')
   if (d.schema.jsonLd.some((j) => !j.ok)) add('bad', 'Invalid JSON-LD block', 'Schema', 'schema.invalid')
-  if (d.wordCount < 300) add('warn', `Thin content (${d.wordCount} words)`, 'Keywords', 'content.thin')
+  if (d.wordCount < 300) add('warn', `Thin content (${d.wordCount} words)`, 'On-page terms', 'content.thin')
   if (!d.robotsTxt) add('warn', 'robots.txt not found', 'Overview', 'robots_txt')
   return out
 }
@@ -73,11 +73,12 @@ export function sitemapsFrom(robotsTxt) {
   return (robotsTxt ?? '').split(/\r?\n/).map((l) => l.match(/^\s*sitemap:\s*(\S+)/i)?.[1]).filter(Boolean)
 }
 
-/** RFC 4180 CSV. */
+/** RFC 4180 CSV. Text starting with = + - @ (or tab/CR) gets a leading ' so spreadsheets don't run third-party text as a formula. */
 export function toCsv(rows) {
   if (!rows.length) return ''
   const cols = Object.keys(rows[0])
-  const esc = (v) => (v == null ? '' : /[",\n\r]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v))
+  const safe = (v) => (typeof v === 'string' && /^[=+\-@\t\r]/.test(v) ? `'${v}` : v)
+  const esc = (raw) => { const v = safe(raw); return v == null ? '' : /[",\n\r]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v) }
   return [cols.join(','), ...rows.map((r) => cols.map((c) => esc(r[c])).join(','))].join('\n')
 }
 

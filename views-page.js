@@ -7,6 +7,10 @@ import { aiReady, descSuggest, explainBtn, titleSuggest } from './ai-ui.js'
 import { howTo } from './fix-ui.js'
 import { buildReport } from './report.js'
 import { stack, SERP_TITLE_PX } from './rules.js'
+import { evaluateAgent, probeAgent } from './agent.js'
+import { lighthouseBlock } from './views-lighthouse.js'
+import { entitiesBlock, trustBlock } from './views-content-extra.js'
+import { auditJson, auditMarkdown } from './generators.js'
 import { h, head, block, kv, tag, btn, ext, ms, num, ring, lengthMeter, bars, timeline, tree, chain, copyBtn, download } from './ui.js'
 
 export const Overview = {
@@ -17,7 +21,7 @@ export const Overview = {
     const robots = sitemapsFrom(d.robotsTxt)
     const xr = d.headers['x-robots-tag'] ?? ''
     return [
-      head('Page health', hl.list.length ? `${hl.bad} to fix, ${hl.warn} to check before this page ranks well.` : 'Nothing on this page needs fixing.', reportBtn(d)),
+      head('Page health', hl.list.length ? `${hl.bad} to fix, ${hl.warn} to check before this page ranks well.` : 'Nothing on this page needs fixing.', reportBtn(d), ...exportBtns(d)),
       h('div', { class: 'split' },
         h('div', { class: 'score-card' }, ring(hl.score, b.status, { label: 'Health' }),
           h('div', {}, h('div', { class: 'grade' }, `Grade ${b.grade}`), h('div', { class: 'muted' }, `${hl.bad} fix · ${hl.warn} check`), btn('All issues', () => go('Issues')))),
@@ -53,12 +57,23 @@ export const Issues = {
     const hl = health(d)
     const groups = [['bad', 'Fix'], ['warn', 'Check']].map(([lvl, label]) => [label, hl.list.filter((i) => i.level === lvl)])
     return [
-      head('Issues', `${hl.list.length} found on this page.`, copyBtn('Copy list', () => hl.list.map((i) => `[${i.level}] ${i.msg}${i.fix ? ` — ${i.fix}` : ''}`).join('\n')), reportBtn(d)),
+      head('Issues', `${hl.list.length} found on this page.`, copyBtn('Copy list', () => hl.list.map((i) => `[${i.level}] ${i.msg}${i.fix ? ` — ${i.fix}` : ''}`).join('\n')), reportBtn(d), ...exportBtns(d)),
       groups.map(([label, list]) => list.length ? block(`${label} (${list.length})`, h('ul', { class: 'issue-list' }, list.map((i) =>
         h('li', {}, tag(i.level), h('span', {}, i.msg, i.fix ? h('span', { class: 'fix' }, i.fix) : '', howTo(d, i), aiReady(d) ? explainBtn(d, i) : ''), h('button', { class: 'link', type: 'button', onclick: () => go(i.section) }, `Open ${i.section}`))))) : ''),
       hl.list.length ? '' : h('p', { class: 'empty' }, 'No issues. Check AI search readiness next.', btn('AI search', () => go('AI search'))),
     ]
   },
+}
+
+/** Agent readiness: probed in the page when this view opens (same-origin requests only). */
+function agentBlock(d) {
+  const out = h('div', {}, h('p', { class: 'muted small' }, 'Checking llms.txt, Markdown delivery, agent discovery files and WebMCP…'))
+  chrome.scripting.executeScript({ target: { tabId: d.tabId }, func: probeAgent }).then(([r]) => {
+    if (!r?.result) throw new Error('no result')
+    out.replaceChildren(h('ul', { class: 'checks' }, evaluateAgent(r.result, d.robotsTxt).map((c) => h('li', {}, tag(c.status, c.status === 'good' ? 'Pass' : c.status === 'warn' ? 'Check' : 'Info'), h('b', {}, c.label), ` — ${c.detail} `, h('span', { class: 'muted small' }, `(${c.standard})`)))),
+      h('p', { class: 'muted small' }, 'Lighthouse’s Agentic Browsing score is under Speed › Lighthouse. None of these files affect Google Search rankings.'))
+  }).catch((e) => out.replaceChildren(h('p', { class: 'muted small' }, `Could not probe this page: ${e.message ?? e}`)))
+  return block('Agent readiness', out)
 }
 
 export const GEO = {
@@ -77,13 +92,14 @@ export const GEO = {
         h('div', { class: 'ssr-track', title: `${Math.round(g.ssrRatio * 100)}% of rendered text exists in the server HTML` }, h('span', { class: `ssr-fill st-${g.ssrRatio >= 0.7 ? 'good' : g.ssrRatio >= 0.3 ? 'warn' : 'bad'}`, style: `width:${g.ssrRatio * 100}%` })),
         h('span', {}, `${Math.round(g.ssrRatio * 100)}% server-rendered · ${num(d.rawTextChars)} of ${num(d.renderedTextChars)} chars`))) : '',
       g.pillars.map((p) => block(`${p.name} · ${p.score}`, h('ul', { class: 'checks' }, p.checks.map((c) => h('li', {}, tag(c.ok ? 'good' : 'warn', c.ok ? 'Pass' : 'Miss'), c.label))))),
+      agentBlock(d),
     ]
   },
 }
 
 export const Content = {
   count: (d) => outline(d.headings).skips.length || null,
-  render(d) {
+  render(d, ctx) {
     const o = outline(d.headings)
     const per = [1, 2, 3, 4, 5, 6].map((l) => ({ label: `H${l}`, value: d.headings.filter((x) => x.level === l).length }))
     return [
@@ -94,6 +110,8 @@ export const Content = {
       h('div', { class: 'split' },
         block(`Bold / strong (${d.emphasis.strong.length})`, d.emphasis.strong.length ? h('ul', { class: 'chips' }, d.emphasis.strong.map((t) => h('li', {}, t))) : h('p', { class: 'muted' }, 'None')),
         block(`Italic / em (${d.emphasis.em.length})`, d.emphasis.em.length ? h('ul', { class: 'chips' }, d.emphasis.em.map((t) => h('li', {}, t))) : h('p', { class: 'muted' }, 'None'))),
+      trustBlock(d),
+      entitiesBlock(d, ctx),
     ]
   },
 }
@@ -116,7 +134,7 @@ export const Keywords = {
     ;[1, 2, 3, 4, 5].forEach((k) => tabs.append(h('button', { role: 'tab', type: 'button', onclick: () => { n = k; draw() } }, `${k} word${k > 1 ? 's' : ''}`, h('small', {}, num(density(d.words, k, 1000).length)))))
     draw()
     return [
-      head('Keyword density', `${num(d.wordCount)} words. T, D and H1 mark whether a phrase also appears in the title, description and H1.`,
+      head('On-page terms', `${num(d.wordCount)} words. T, D and H1 mark whether a phrase also appears in the title, description and H1.`,
         btn('Export CSV', () => download(`keywords-${d.host}.csv`, toCsv([1, 2, 3, 4, 5].flatMap((k) => density(d.words, k, 100).map((r) => ({ words: k, ...r }))))))),
       tabs, out,
       keywordMetricsBlock(d, ctx),
@@ -141,12 +159,15 @@ export const Speed = {
         ['DOM nodes', num(p.domNodes)], ['Server', d.headers.server], ['Compression', d.headers['content-encoding']], ['Cache-Control', d.headers['cache-control']],
       ]),
       cruxBlock(d, ctx),
+      lighthouseBlock(d, ctx),
       p.phases?.length ? block('Where the time went (this load, lab)', timeline(p.phases, { markers: p.lcp ? [{ name: 'LCP', at: p.lcp, status: lcpSt }] : [] })) : h('p', { class: 'empty' }, 'Navigation timing is not available for this page.'),
     ]
   },
 }
 
 export const reportBtn = (d) => btn('Export report', () => download(`seo-report-${d.host}.html`, buildReport(d, d.lenses), 'text/html'))
+/** The audit as Markdown (for docs, tickets, AI tools) and JSON (for other tools). */
+const exportBtns = (d) => [btn('Markdown', () => download(`seo-audit-${d.host}.md`, auditMarkdown(d, health(d), geo(d)), 'text/markdown')), btn('JSON', () => download(`seo-audit-${d.host}.json`, auditJson(d, health(d), geo(d)), 'application/json'))]
 /** Toggle an on-page overlay layer; the label tracks the page state. */
 export const overlayBtn = (d, layer, label) => btn(label, async (e) => {
   const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: d.tabId }, func: overlay, args: [layer] })

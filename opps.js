@@ -1,7 +1,8 @@
 // Growth opportunities: what to change or add so this page earns more clicks, better positions and AI citations.
 // Pure. Inputs: page data, Search Console query rows (with previous-period values), Google-results observations
-// saved by serp.js, and Compare's phrase gaps. Each opportunity: { kind, title, why, actions[], gain, score }.
+// saved by serp.js, Compare's phrase gaps and AI visibility runs. Each opportunity: { kind, title, why, actions[], gain, score }.
 import { typedNodes } from './rules.js'
+import { robotsAllows } from './analyze.js'
 
 // ponytail: one generic desktop CTR-by-position curve; real CTR swings with SERP layout and intent, so gains are estimates.
 const CTR = [0.28, 0.15, 0.11, 0.08, 0.07, 0.05, 0.04, 0.03, 0.03, 0.025]
@@ -22,8 +23,11 @@ export function coverage(query, d) {
 const q = (s) => `“${s}”`
 const round = (n) => Math.max(1, Math.round(n))
 
-/** Search Console queries → opportunities. One per query, the most urgent kind wins. */
-export function queryOpps(queries, d, { minImpressions = 20 } = {}) {
+/**
+ * Search Console queries → opportunities. One per query, the most urgent kind wins.
+ * `hadPrevious`: the previous period has data, so a query missing from it is new (flagged `fresh`).
+ */
+export function queryOpps(queries, d, { minImpressions = 20, hadPrevious = false } = {}) {
   const out = []
   for (const r of queries) {
     const cov = coverage(r.query, d)
@@ -54,7 +58,8 @@ export function queryOpps(queries, d, { minImpressions = 20 } = {}) {
         actions: [`Add a dedicated section (or a separate page, linked from here) that fully answers ${q(r.query)}.`, ...onPage.slice(0, 1)] })
     }
   }
-  return out
+  const fresh = new Set(hadPrevious ? queries.filter((r) => r.prev === null).map((r) => r.query) : [])
+  return out.map((o) => (fresh.has(o.query) ? { ...o, fresh: true, why: `New this period. ${o.why}` } : o))
 }
 
 /** AI Overviews seen on Google (serp.js) for this site's domain that don't cite it. Latest observation per query. */
@@ -94,8 +99,42 @@ export const gapOpps = (saved) => (saved?.gaps?.length ? [{ kind: 'gap', title: 
   actions: [`Address these where relevant: ${saved.gaps.slice(0, 12).join(', ')}.`] }] : [])
 
 // Order: measured click gains first (largest first), then AI citations, competitor gaps, on-page additions.
-const RANK = { declining: 3, low_ctr: 3, striking: 3, deep: 3, ai_overview: 2, gap: 1 }
+const RANK = { declining: 3, low_ctr: 3, striking: 3, deep: 3, ai_overview: 2, ai_competitor: 2, ai_crawler: 2, ai_comparison: 2, gap: 1 }
 export const ranked = (list) => [...list].sort((a, b) => (RANK[b.kind] ?? 0) - (RANK[a.kind] ?? 0) || (b.gain ?? 0) - (a.gain ?? 0))
 
 /** Markdown action plan for copying into a ticket or doc. */
 export const plan = (url, list) => [`# SEO opportunities: ${url}`, '', ...list.flatMap((o, i) => [`## ${i + 1}. ${o.title}${o.gain ? ` (≈ +${o.gain} clicks / 28 days)` : ''}`, o.why, ...o.actions.map((a) => `- [ ] ${a}`), ''])].join('\n')
+
+const COMPARISON = /\b(vs\.?|versus|alternatives?|compare[ds]?|comparison|best|top \d+)\b/i
+/**
+ * AI visibility (aivis.js) → cards. `items`: [{ prompt, run }] with each prompt's latest run; `engineBots`: engine → robots.txt agents.
+ * Only answered, citation-capable checks count: a failed check or an engine that gave no sources is never read as "not cited".
+ */
+export function aiVisibilityOpps(items, d, { engineBots = {}, engineNames = {} } = {}) {
+  const out = [], name = (e) => engineNames[e] ?? e
+  for (const { prompt, run } of items) {
+    const ok = run.results.filter((r) => r.judged.ok && r.judged.shown)
+    const lost = ok.filter((r) => r.judged.canCite && !r.judged.cited && r.judged.competitors.some((c) => c.cited))
+    if (lost.length) {
+      const rivals = [...new Set(lost.flatMap((r) => r.judged.competitors.filter((c) => c.cited).map((c) => c.domain)))]
+      const urls = [...new Set(lost.flatMap((r) => r.judged.competitors.flatMap((c) => c.urls)))].slice(0, 3)
+      out.push({ kind: 'ai_competitor', query: prompt.prompt, title: `Get cited for ${q(prompt.prompt)}`, gain: null,
+        why: `${lost.map((r) => name(r.engine)).join(', ')} cite ${rivals.join(', ')} but not you (checked ${run.at.slice(0, 10)}).`,
+        actions: [`Read what the cited page${urls.length > 1 ? 's' : ''} answer that yours doesn’t: ${urls.join(', ')}.`, 'Answer the prompt in the first paragraph of your best-matching page, with specifics (numbers, steps, prices) an engine can quote.', 'Get mentioned on the other sites these engines cite for it.'] })
+    }
+    if (COMPARISON.test(prompt.prompt) && ok.length && !ok.some((r) => r.judged.mentioned || r.judged.cited)) {
+      out.push({ kind: 'ai_comparison', query: prompt.prompt, title: `Publish a comparison page for ${q(prompt.prompt)}`, gain: null,
+        why: `No AI engine checked (${ok.map((r) => name(r.engine)).join(', ')}) mentions you for this comparison prompt.`,
+        actions: ['Write an honest comparison or “best of” page that includes you, with a summary table near the top.', 'State who each option suits; AI answers quote those lines.', 'Link to it from your product and pricing pages.'] })
+    }
+  }
+  const tracked = new Set(items.flatMap(({ prompt }) => prompt.engines))
+  const path = (() => { try { return new URL(d.url).pathname } catch { return '/' } })()
+  for (const [engine, bots] of Object.entries(engineBots)) {
+    const blocked = tracked.has(engine) ? bots.filter((b) => !robotsAllows(d.robotsTxt, b, path)) : []
+    if (blocked.length) out.push({ kind: 'ai_crawler', title: `Let ${blocked.join(' and ')} crawl your site`, gain: null,
+      why: `robots.txt blocks ${blocked.join(', ')}, so ${name(engine)} can’t fetch your pages to cite them, and you track prompts on it.`,
+      actions: [`Allow ${blocked.join(' and ')} in robots.txt (they fetch pages for answers; they are not training crawlers).`, 'Re-run your AI visibility prompts a few days after the change.'] })
+  }
+  return out
+}

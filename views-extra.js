@@ -1,5 +1,6 @@
 // Redirects & headers tracer, and Local SEO.
 import { analyseLocal } from './local.js'
+import { geoGridBlock } from './views-geogrid.js'
 import { analyseChain, NEEDS, trace } from './redirects.js'
 import { AGENTS } from './ua.js'
 import { h, head, block, kv, tag, btn, ext } from './ui.js'
@@ -34,7 +35,7 @@ export const Redirects = {
 export const Local = {
   name: 'Local SEO',
   count: (d) => { const a = analyseLocal(d); return a.looksLocal ? a.checks.filter((c) => !c.ok).length || null : null },
-  render(d) {
+  render(d, ctx) {
     const a = analyseLocal(d)
     if (!a.looksLocal) return [head('Local SEO', 'This page doesn’t look like a local business page (no LocalBusiness schema, map, Maps links, or phone + address).'), block('Links', h('div', { class: 'linkgrid' }, a.links.map(([l, u]) => ext(u, l))))]
     return [
@@ -43,6 +44,7 @@ export const Local = {
       block('Checks', h('ul', { class: 'checks' }, a.checks.map((c) => h('li', {}, tag(c.ok ? 'good' : c.level, c.ok ? 'Pass' : 'Check'), c.label)))),
       block(`Name / address / phone found (${a.sources.length})`, h('div', { class: 'scroll-x' }, h('table', {}, h('thead', {}, h('tr', {}, ['Source', 'Name', 'Phone', 'Address'].map((t) => h('th', {}, t)))),
         h('tbody', {}, a.sources.map((s) => h('tr', {}, h('td', {}, s.source), h('td', {}, s.name), h('td', { class: 'mono nowrap' }, s.phone), h('td', { class: 'small' }, s.address))))))),
+      geoGridBlock(d, a, ctx),
       a.gbpLinks.length ? block('Google Maps / Business Profile links on the page', h('div', {}, a.gbpLinks.map((u) => h('div', { class: 'mono small' }, ext(u))))) : '',
       block('Check the listing', h('div', { class: 'linkgrid' }, a.links.map(([l, u]) => ext(u, l)))),
       h('p', { class: 'muted small' }, 'Phones are compared on their last 10 digits. "Page text" matches are pattern-based and can include non-phone numbers.'),

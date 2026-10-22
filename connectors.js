@@ -5,9 +5,17 @@ import { cruxTest } from './crux.js'
 import { GSC_PERMS, TEST_USER_MSG, isConnected, oauthConfigured, oauthProblem, signIn, signOut } from './gsc.js'
 import { CAPABILITIES, MARKETS, PROVIDERS, grantProvider, hasCreds, loadKeys, saveKeys } from './keys.js'
 import { API } from './providers.js'
+import { GA4_PERMS, ga4Connected, ga4SignIn, ga4SignOut, nlpTest, oprTest, psiTest, validIndexNowKey } from './apis.js'
 import { h, btn } from './ui.js'
 
-const TEST = { bing: (c) => bingTest(c.key), crux: (c) => cruxTest(c.key), ...Object.fromEntries(Object.entries(API).map(([id, a]) => [id, a.test])) }
+const TEST = { bing: (c) => bingTest(c.key), crux: (c) => cruxTest(c.key), ...Object.fromEntries(Object.entries(API).map(([id, a]) => [id, a.test])),
+  pagespeed: (c) => psiTest(c.key), openpagerank: (c) => oprTest(c.key), naturallanguage: (c) => nlpTest(c.key),
+  indexnow: async (c) => { if (!validIndexNowKey(c.key)) throw new Error('A key is 8–128 letters, digits or dashes.'); return 'Key format OK. IndexNow checks the key file on each site when you submit.' } }
+// Google sign-in connectors: same card, each with its own scope and APIs.
+const GOOGLE = {
+  gsc: { perms: GSC_PERMS, connected: () => isConnected(), signIn, signOut, problem: () => oauthProblem() },
+  ga4: { perms: GA4_PERMS, connected: () => ga4Connected(), signIn: ga4SignIn, signOut: ga4SignOut, problem: () => oauthProblem() },
+}
 const pill = (state, text) => h('span', { class: `pill-status ${state}`, role: 'status' }, h('i', { 'aria-hidden': 'true' }), text)
 
 function card(id, cfg, save) {
@@ -20,19 +28,20 @@ function card(id, cfg, save) {
 
   const render = async () => {
     if (p.auth === 'google') {
-      const on = oauthConfigured() && (await isConnected())
-      const problem = await oauthProblem()
+      const g = GOOGLE[id]
+      const on = oauthConfigured() && (await g.connected())
+      const problem = await g.problem()
       status.replaceChildren(pill(on ? 'on' : problem ? 'warn' : 'off', on ? 'Connected' : problem ? 'Reload needed' : 'Not connected'))
       if (problem) say(problem)
       actions.replaceChildren(on
-        ? btn('Disconnect', async () => { await signOut(); say(''); render() })
+        ? btn('Disconnect', async () => { await g.signOut(); say(''); render() })
         : btn('Connect', async (e) => {
           // permissions.request first, inside the click: an earlier await would drop the user gesture.
           // Never silently disabled: if sign-in can't work in this loaded build, say exactly why.
           if (problem) { say(problem); return }
-          if (!(await chrome.permissions.request(GSC_PERMS))) { say('Chrome needs the identity permission and access to Google’s APIs to connect.'); return }
+          if (!(await chrome.permissions.request(g.perms))) { say('Chrome needs the identity permission and access to Google’s APIs to connect.'); return }
           e.target.disabled = true; say('Waiting for Google sign-in…')
-          try { await signIn(); say(''); render() } catch (err) { say(err.message) } finally { e.target.disabled = false }
+          try { await g.signIn(); say(''); render() } catch (err) { say(err.message) } finally { e.target.disabled = false }
         }))
       return
     }
@@ -74,7 +83,7 @@ export function connectorsPanel() {
     const route = (cap) => h('label', { class: 'field' }, h('span', {}, CAPABILITIES[cap]), h('select', { onchange: (e) => { cfg.route[cap] = e.target.value || null; save() } },
       h('option', { value: '' }, 'Automatic (first connected provider)'), Object.entries(PROVIDERS).filter(([, p]) => p.can.includes(cap)).map(([id, p]) => h('option', { value: id, selected: cfg.route[cap] === id }, p.name))))
     body.replaceChildren(
-      ...['gsc', 'bing', 'crux', 'dataforseo', 'semrush', 'ahrefs'].map((id) => card(id, cfg, save)),
+      ...['gsc', 'ga4', 'bing', 'crux', 'pagespeed', 'dataforseo', 'semrush', 'ahrefs', 'moz', 'openpagerank', 'naturallanguage', 'indexnow'].map((id) => card(id, cfg, save)),
       h('div', { class: 'conn' }, h('div', { class: 'conn-name' }, 'Routing'), h('p', { class: 'conn-meta' }, 'Which connected provider answers each question, and for which market.'),
         ...Object.keys(CAPABILITIES).map(route),
         h('label', { class: 'field' }, h('span', {}, 'Market'), h('select', { onchange: (e) => { cfg.market = e.target.value; save() } }, Object.entries(MARKETS).map(([k, m]) => h('option', { value: k, selected: k === cfg.market }, m.label)))),

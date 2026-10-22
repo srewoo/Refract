@@ -1,5 +1,8 @@
 // Link/asset/site views: Links, Images, Schema, Social, Hreflang, Ads & tags, Domain, Tools, Settings.
 import { linkStats, registrableDomain, toCsv, toolLinks } from './analyze.js'
+import { backupBlock } from './views-backup.js'
+import { spendBlock } from './views-spend.js'
+import { heritageBlock, hreflangBuilder, schemaTemplatesBlock } from './views-tools.js'
 import { imageFormats, schemaTree, topDomains } from './geo.js'
 import { overlayBtn } from './views-page.js'
 import { aiReady, altSuggest, jsonLdDraft } from './ai-ui.js'
@@ -54,7 +57,7 @@ export const Links = {
       } catch (err) { checkStatus.textContent = `Check failed: ${err.message ?? err}` } finally { e.target.disabled = false; draw() }
     })
     return [
-      head('Links', `${num(st.total)} links (${num(st.unique)} unique) to ${num(new Set(d.links.filter((l) => !l.internal).map((l) => { try { return new URL(l.href).hostname } catch { return l.href } })).size)} external hosts.`,
+      head('On-page links', `${num(st.total)} links (${num(st.unique)} unique) to ${num(new Set(d.links.filter((l) => !l.internal).map((l) => { try { return new URL(l.href).hostname } catch { return l.href } })).size)} external hosts.`,
         checkBtn, overlayBtn(d, 'nofollow', 'Highlight nofollow'),
         btn('Export CSV', () => download(`links-${d.host}.csv`, toCsv(d.linkCheck ? d.links.map((l) => ({ ...l, status: result(l)?.status ?? '', outcome: result(l)?.outcome ?? '' })) : d.links)))),
       h('p', { class: 'muted small' }, 'Check links requests every unique link on this page (up to 300, six at a time, no cookies) and reports its status. ', checkStatus),
@@ -99,6 +102,7 @@ export const Schema = {
         btn('Schema validator', () => chrome.tabs.create({ url: `https://validator.schema.org/#url=${encodeURIComponent(d.url)}` })),
         sc.jsonLd.length ? btn('Export JSON', () => download(`schema-${d.host}.json`, JSON.stringify(sc.jsonLd.map((j) => j.data ?? j.raw), null, 2), 'application/json')) : ''),
       aiReady(d) ? block('Draft with Chrome AI (on-device)', jsonLdDraft(d)) : '',
+      schemaTemplatesBlock(d),
       t.length ? block('Type tree', tree(t.map((n) => ({ depth: n.depth, label: n.type, note: n.key ? `via ${n.key}` : '' })))) : '',
       sc.microdata.length ? block('Microdata', h('ul', { class: 'chips mono' }, sc.microdata.map((m) => h('li', {}, m)))) : '',
       sc.jsonLd.map((j, i) => h('details', { class: 'code', open: !j.ok }, h('summary', {}, `Block ${i + 1}`, j.ok ? '' : tag('bad', 'Invalid JSON')), h('pre', {}, j.ok ? JSON.stringify(j.data, null, 2) : `${j.error}\n\n${j.raw}`))),
@@ -128,7 +132,7 @@ export const Hreflang = {
   count: (d) => d.hreflang.filter((x) => !LANG_RE.test(x.lang)).length || null,
   render(d) {
     const hl = d.hreflang
-    if (!hl.length) return [head('Hreflang', 'No hreflang annotations. Only needed if this page has language or region variants.')]
+    if (!hl.length) return [head('Hreflang', 'No hreflang annotations. Only needed if this page has language or region variants.'), hreflangBuilder(d)]
     const self = hl.some((x) => x.href.replace(/#.*/, '') === d.url.replace(/#.*/, ''))
     const dup = hl.map((x) => x.lang.toLowerCase()).filter((v, i, a) => a.indexOf(v) !== i)
     return [
@@ -139,6 +143,7 @@ export const Hreflang = {
         h('li', {}, tag(dup.length ? 'bad' : 'good', dup.length ? 'Fix' : 'Pass'), dup.length ? `Duplicate codes: ${[...new Set(dup)].join(', ')}` : 'No duplicate language codes'))),
       h('div', { class: 'scroll-x' }, h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, 'Code'), h('th', {}, 'URL'), h('th', {}, ''))),
         h('tbody', {}, hl.map((x) => h('tr', {}, h('td', { class: 'mono' }, x.lang), h('td', { class: 'mono' }, ext(x.href)), h('td', {}, LANG_RE.test(x.lang) ? '' : tag('bad', 'Invalid code'))))))),
+      hreflangBuilder(d),
     ]
   },
 }
@@ -213,6 +218,7 @@ async function loadDomain(d) {
         : h('p', { class: 'muted' }, 'No RDAP for this TLD. ', ext(`https://lookup.icann.org/en/lookup?name=${domain}`, 'ICANN lookup'))),
       block('Hosting', kv([['IP', ip && h('span', { class: 'mono' }, ip)], ['Location', geo && [geo.city, geo.region, geo.country].filter(Boolean).join(', ')], ['Network', geo?.org], ['Reverse DNS', geo?.hostname], ['First archived', firstArchived && ext(`https://web.archive.org/web/${firstSnap.timestamp}/${domain}`, firstArchived)]]))),
     block('DNS', kv([['A', list(a)], ['AAAA', list(aaaa)], ['NS', list(ns)], ['MX', list(mx)]])),
+    heritageBlock(d),
   ]
 }
 
@@ -235,6 +241,9 @@ export const Tools = {
 }
 
 export const DEFAULTS = { serpBadges: true, paaButton: true, startView: 'Overview' }
+/** Old view names → current ones: issue links, ?view= links and saved start views still use the old names. */
+export const RENAMED = { Keywords: 'On-page terms', Links: 'On-page links' }
+export const viewName = (v) => RENAMED[v] ?? v
 export const Settings = {
   render(d, { views }) {
     const out = h('div')
@@ -246,9 +255,9 @@ export const Settings = {
         toggle('paaButton', 'Google results: People Also Ask extractor button', 'Applies on next Google search.'),
         aiSetting(d),
         h('label', { class: 'setting' }, h('span', {}, h('b', {}, 'Open on'), h('span', { class: 'muted small' }, 'First view when the popup opens.')),
-          h('select', { onchange: (e) => save('startView', e.target.value) }, views.map((v) => h('option', { value: v, selected: v === cfg.startView }, v)))))
+          h('select', { onchange: (e) => save('startView', e.target.value) }, views.map((v) => h('option', { value: v, selected: v === viewName(cfg.startView) }, v)))))
     })
-    return [head('Settings', 'Preferences sync with your Chrome profile; API keys stay on this computer.'), out, connectorsPanel(), h('p', { class: 'muted small' }, h('a', { href: 'help.html', target: '_blank' }, 'Help'), ' · ', h('a', { href: 'privacy.html', target: '_blank' }, 'Privacy policy'))]
+    return [head('Settings', 'Preferences sync with your Chrome profile; API keys stay on this computer.'), out, connectorsPanel(), spendBlock(), backupBlock(), h('p', { class: 'muted small' }, h('a', { href: 'help.html', target: '_blank' }, 'Help'), ' · ', h('a', { href: 'privacy.html', target: '_blank' }, 'Privacy policy'))]
   },
 }
 

@@ -1,15 +1,17 @@
 {
   "name": "refract-seo",
+  "version": "3.4",
   "private": true,
   "description": "Refract SEO Chrome extension. No build step: the folder loads unpacked as-is; `npm run build` makes the Web Store zip.",
   "type": "module",
   "scripts": {
-    "check": "node checks-gsc-links.mjs && node checks-growth.mjs",
+    "check": "node test.mjs && node checks-gsc-links.mjs && node checks-growth.mjs",
     "check:serp": "node serp-check.mjs .",
     "zip": "python3 store/package.py",
     "build": "npm run check && npm run zip"
   },
   "devDependencies": {
+    "jsdom": "25.0.1",
     "playwright-core": "1.58.2"
   }
 }
