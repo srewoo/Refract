@@ -4,12 +4,14 @@ import { cruxFor } from './crux.js'
 import { MARKETS, PROVIDERS, hasCreds, loadKeys, providerFor } from './keys.js'
 import { API } from './providers.js'
 import { loadSaved } from './keywords.js'
+import { RANK_KEYWORDS, RANK_POINTS, checkRanks, readTracker, trackerKey } from './ranks.js'
+import { scheduleBlock } from './views-schedule.js'
+export { RANK_KEYWORDS, RANK_POINTS }
 import { h, head, block, kv, tag, btn, num, bars, stack, lineChart, spark, download } from './ui.js'
 
 export const note = (text) => h('p', { class: 'muted small' }, text)
 export const failBox = (e) => h('p', { class: 'empty' }, `Could not fetch: ${e.message ?? e}`)
 export const needKey = (what, go) => h('div', { class: 'empty' }, h('b', {}, `${what} needs a data source.`), h('p', {}, 'Connect DataForSEO, Semrush or Ahrefs in Settings › Connectors. Keys stay on this computer.'), btn('Open Settings', () => go('Settings')))
-const store = { get: async (k) => (await chrome.storage.local.get(k))[k], set: (k, v) => chrome.storage.local.set({ [k]: v }) }
 const ms = (v, unit) => (unit === 'ms' ? (v >= 1000 ? `${(v / 1000).toFixed(2)} s` : `${Math.round(v)} ms`) : String(Number(v).toFixed(2)))
 
 // ---------------- CrUX field data (inside Speed) ----------------
@@ -63,7 +65,6 @@ export function keywordMetricsBlock(d, { go }) {
 }
 
 // ---------------- Rank tracking ----------------
-export const RANK_KEYWORDS = 50, RANK_POINTS = 120 // per tracker; one point per keyword per day
 // DataForSEO is a live SERP check; Semrush/Ahrefs positions come from their index of the domain's top keywords.
 const rankKind = (pt) => (pt?.provider == null ? 'unknown' : pt.provider === 'dataforseo' ? 'live' : 'estimate')
 /** History points of the same kind as the latest one, so a trend never joins live checks to index estimates. */
@@ -118,13 +119,14 @@ export const Rankings = {
     const device = pick('Device', ['desktop', 'mobile'], (v) => v[0].toUpperCase() + v.slice(1), () => load())
     const depth = pick('Results to check', [100, 50, 20, 10], (v) => `Top ${v}`, () => estimate())
     const opts = h('div', { class: 'bar-line', hidden: true }, device, depth, cost)
+    const sched = h('div')
     const isDfs = () => cfg && providerFor(cfg, 'ranks') === 'dataforseo'
     const keywords = () => [...new Set(area.value.split('\n').map((x) => x.trim().toLowerCase()).filter(Boolean))].slice(0, RANK_KEYWORDS)
     const estimate = () => { cost.textContent = isDfs() ? `${keywords().length} live checks · about ${usd(dfsRankCost(keywords().length, +depth.value))} of DataForSEO credit` : '' }
     // One tracker per market and device; trackers saved before that (one per domain) are read as desktop and left in place.
-    const key = () => `ranks:${domain}:${cfg.market}:${isDfs() ? device.value : 'desktop'}`
+    const key = () => trackerKey(domain, cfg.market, isDfs() ? device.value : 'desktop')
     // The pre-split tracker didn't record its market, so it is offered under every market's desktop tracker, with a note.
-    const read = async (k = key()) => { const own = await store.get(k); return own ? { saved: own } : k.endsWith(':desktop') ? { saved: await store.get(`ranks:${domain}`), legacy: true } : {} }
+    const read = (k = key()) => readTracker(domain, k)
     const legacyNote = 'Showing history saved before trackers were split by market and device; its market was not recorded. The next check starts this market’s own tracker from it.'
     const load = async () => {
       cfg = await loadKeys()
@@ -135,6 +137,8 @@ export const Rankings = {
       out.replaceChildren(saved ? rankTable(saved, chart) : '')
       status.textContent = saved && legacy ? legacyNote : ''
       estimate()
+      // One schedule per tracker (market × device), so it follows the device menu.
+      sched.replaceChildren(scheduleBlock(() => ({ id: key(), kind: 'ranks', domain, label: `Rank tracking · ${domain} · ${cfg.market}${isDfs() ? ` · ${device.value}` : ''}`, ranks: { market: cfg.market, device: isDfs() ? device.value : 'desktop', depth: +depth.value } }), { go }))
     }
     const check = btn('Check positions now', async (e) => {
       cfg = await loadKeys()
@@ -142,33 +146,9 @@ export const Rankings = {
       const id = providerFor(cfg, 'ranks')
       if (!id) { out.replaceChildren(needKey('Rank tracking', go)); return }
       const k = key() // fixed for this check: the device menu can't redirect results mid-run
-      const saved = (await read(k)).saved ?? { keywords: [], history: {} }
-      saved.keywords = keywords()
       e.target.disabled = device.disabled = depth.disabled = true
-      const date = new Date().toISOString().slice(0, 10)
-      const failed = []
       try {
-        const m = MARKETS[cfg.market]
-        const o = id === 'dataforseo' ? { device: device.value, depth: +depth.value } : { depth: 50 }
-        let results
-        if (id === 'dataforseo') {
-          results = []
-          for (const [i, kw] of saved.keywords.entries()) { // one failure must not discard the checks already paid for
-            status.textContent = `Checking “${kw}” (${i + 1}/${saved.keywords.length})…`
-            try { results.push(await API.dataforseo.rank(cfg.creds.dataforseo, kw, domain, m, o)) } catch (x) { failed.push([kw, x.message ?? String(x)]) }
-          }
-          if (!results.length && failed.length) throw new Error(failed[0][1])
-        } else {
-          status.textContent = `Reading ${domain}’s ranking keywords from ${PROVIDERS[id].name}…`
-          const ranked = await API[id].rankedKeywords(cfg.creds[id], domain, m)
-          results = saved.keywords.map((kw) => { const hit = ranked.find((r) => r.keyword.toLowerCase() === kw); return { keyword: kw, position: hit?.position ?? null, url: hit?.url ?? null } })
-        }
-        for (const r of results) {
-          const hist = (saved.history[r.keyword] ?? []).filter((x) => x.date !== date) // one point per day
-          saved.history[r.keyword] = [...hist, { date, position: r.position, url: r.url, provider: id, ...o, cost: r.cost, features: r.features }].slice(-RANK_POINTS)
-        }
-        await store.set(k, saved)
-        const spent = results.reduce((t, r) => t + (r.cost ?? 0), 0)
+        const { saved, results, failed, o, m, spent } = await checkRanks({ cfg, id, k, domain, keywords: keywords(), device: device.value, depth: +depth.value, onProgress: (t) => { status.textContent = t } })
         status.textContent = `Checked ${results.length} keywords with ${PROVIDERS[id].name} (${m.label}${o.device ? `, ${o.device}, top ${o.depth}` : ''}).${id === 'dataforseo' ? ` Cost ${usd(spent)}.` : ' Positions come from the provider’s index of the domain’s top keywords; a blank means not in its top 50.'}${failed.length ? ` ${failed.length} failed and were not saved (${failed.slice(0, 3).map(([kw]) => `“${kw}”`).join(', ')}): ${failed[0][1]}` : ''}`
         chart.replaceChildren()
         out.replaceChildren(rankTable(saved, chart))
@@ -194,7 +174,7 @@ export const Rankings = {
       estimate()
     })
     load()
-    return [head('Rank tracking', `Google positions for ${domain}. Each check is stored here, so positions build a history over time.`, check), area, h('div', { class: 'bar-line' }, fromSaved), opts, status, out, chart, h('div', { class: 'bar-line' }, ranking), extra]
+    return [head('Rank tracking', `Google positions for ${domain}. Each check is stored here, so positions build a history over time.`, check), area, h('div', { class: 'bar-line' }, fromSaved), opts, status, out, chart, sched, h('div', { class: 'bar-line' }, ranking), extra]
   },
 }
 

@@ -7,7 +7,7 @@ Clean-room: features were mapped from the four published packages; no code was c
 
 **Load:** `chrome://extensions` → Developer mode → Load unpacked → this folder. No build step.
 
-The popup is a 780×590 panel: a rail with the site, a health score and 15 views. Each view's count shows how many things need attention there. Every view opens with a one-line answer, then the evidence.
+The popup is a 780×590 panel: a rail with the site, a health score and 29 views in four groups (Page, Crawlers, Site, Workflow). The table below covers the page views; the research views are under [Research workspace](#research-workspace). Each view's count shows how many things need attention there. Every view opens with a one-line answer, then the evidence.
 
 | View | Answers | Charts / diagrams |
 |---|---|---|
@@ -16,8 +16,8 @@ The popup is a 780×590 panel: a rail with the site, a health score and 15 views
 | Opportunities | What to change or add to gain clicks, rankings and AI citations | ranked cards with estimated click gains: Search Console striking-distance / low-CTR / declining / page-3 queries with missing words, AI Overviews not citing you (saved by the SERP panel), Compare phrase gaps, content additions; Markdown action plan (`opps.js`) |
 | AI search | Will AI engines crawl, parse and cite it? | readiness ring, 5 pillar bars (26 real checks), AI-bot robots.txt grid (GPTBot, ClaudeBot, PerplexityBot…), server-rendered text bar, `llms.txt` |
 | Content | Is the heading hierarchy sound? | H1–H6 bars, outline tree flagging skipped levels, bold/italic lists |
-| Keywords | What is this page actually about? | 1–5 word density bars with title/description/H1 placement marks, CSV |
-| Links | Where does link equity go? | internal/external and follow/nofollow/sponsored stacked bars, top external domains, filterable table, nofollow highlighter, **Check links** (status of every link: OK / redirect / restricted / broken / no response, `linkcheck.js`), CSV |
+| On-page terms | What is this page actually about? | 1–5 word density bars with title/description/H1 placement marks, CSV |
+| On-page links | Where does link equity go? | internal/external and follow/nofollow/sponsored stacked bars, top external domains, filterable table, nofollow highlighter, **Check links** (status of every link: OK / redirect / restricted / broken / no response, `linkcheck.js`), CSV |
 | Images | Is alt text covered? | alt coverage stacked bar, format bars, thumbnails, CSV |
 | Schema | What does structured data declare? | JSON-LD type tree (nested via property), microdata, validators, raw blocks |
 | Social | What will a share look like? | OG and X card previews |
@@ -55,7 +55,7 @@ Also from Refract:
 - **Overlays**: highlight nofollow links, mark images with no alt, label headings, each toggled from its view.
 - **Export report**: one self-contained HTML file (inline CSS, no scripts, page text escaped) with scores, issues and fixes, indexing, AI readiness and bot's-eye results.
 
-Not ported (would complicate SSS): framework fix snippets/Live Preview, on-device AI, Search Console/CrUX/Ahrefs connectors, site crawl, workspace/projects.
+Not ported: Refract's Live Preview and its workspace/projects model. Research data is kept per domain instead (see below).
 
 ### Surfaces
 
@@ -90,7 +90,7 @@ Gemini Nano through the Prompt API, ported from Refract's `tier1.ts` and `firewa
 
 - **Search Console** (`gsc.js`): Refract's method: `chrome.identity.getAuthToken` with Refract's Chrome-extension OAuth client (`manifest.oauth2`), which works because the manifest carries Refract's `key` (same extension ID). Read-only scope. Shows clicks, impressions, CTR, position, daily clicks and top queries, each against the previous 28 days (% change, position change, new queries); URL Inspection runs on **Inspect** (daily quota). **While the Cloud app is in Testing, the Google account must be a Test user on its OAuth consent screen**; the connector card and the view say so.
 - **Bing Webmaster** (`bing.js`): API key. Shows page clicks, impressions and position, the site's top queries and inbound links.
-- **BYOK providers** (`keys.js`, `providers.js`): DataForSEO, Semrush and Ahrefs, routed per capability (ranks, keyword volume/difficulty, backlinks) with a market setting. Keys live in `chrome.storage.local` and go only to their provider; each API host is requested as a permission when its key is saved. Request and response contracts come from Refract's connectors.
+- **BYOK providers** (`keys.js`, `providers.js`, `moz.js`, `apis.js`): DataForSEO, Semrush, Ahrefs and Moz, routed per capability (ranks, keyword volume/difficulty, backlinks) with a market setting. Keys live in `chrome.storage.local` and go only to their provider; each API host is requested as a permission when its key is saved. Request and response contracts come from Refract's connectors.
 - **CrUX field data** (`crux.js`): free Google key; URL and origin p75 plus good/needs-work/poor shares, phone or desktop, and a 25-week trend, in Speed.
 - **Rank tracking:** positions stored per domain per day, so trends build over time.
 - **History** (`history.js`): an automatic snapshot per audit (50 per URL, 300 URLs) with field diffs and issues added or resolved. Crawls diff against the previous crawl.
@@ -99,7 +99,18 @@ Gemini Nano through the Prompt API, ported from Refract's `tier1.ts` and `firewa
 - **Local SEO** (`local.js`): NAP from schema, `tel:` links and text, consistency checks, LocalBusiness completeness, Maps and Business Profile links. The crawl reports phone variants across pages.
 - **Crawl:** up to 1,000 pages (`unlimitedStorage`), optional JavaScript rendering in a worker tab (`render.js`) with a "content that needs JavaScript" report.
 
-Checks: `node sss/smoke-data.mjs` drives all of the above in real Chromium with intercepted provider APIs (no real keys).
+
+### Research workspace
+
+Kept per domain in `chrome.storage.local` (`kw:`, `ranks:`, `competitors:`, `blsnap:`, `aiprompts:`… prefixes; Settings › Research data backs them up and restores them as JSON, never with keys).
+
+- **Keyword research** (`views-research.js`, `keywords.js`): discovery from DataForSEO Labs / Google Ads or Semrush, saved keywords with tags, target URL and notes, token and SERP-overlap clusters, CSV import/export.
+- **Rankings** (`views-data.js`, `ranks.js`): one tracker per market and device (DataForSEO live checks, or Semrush/Ahrefs index estimates, labelled as such), up to 50 keywords and 120 daily points, with a cost estimate before each check.
+- **Competitors** (`views-competitors.js`): domain overview and keyword gap.
+- **Backlinks** (`views-backlinks.js`, `links.js`): daily snapshots, new/lost referring domains, link rows, link gap, outreach prospects, disavow file.
+- **AI visibility** (`views-ai.js`, `aivis.js`): saved prompts run on Google AI Overview, AI Mode, ChatGPT and Perplexity through DataForSEO; results keep *cited*, *mentioned*, *engine cannot cite* and *check failed* apart.
+- **Spend** (`ledger.js`, Settings › Spend): every paid request recorded; optional daily cap per provider (dollars for DataForSEO, requests for the rest), checked before each call.
+- **Schedules** (`schedules.js`, `views-schedule.js`): Rankings and AI visibility can run daily or weekly. A `chrome.alarms` tick every 30 minutes runs due schedules in the service worker, **only while Chrome is running**; a run missed while Chrome was closed runs once on the next start, marked late with its original due time. A schedule can't be turned on until its provider has a daily cap, and it skips (with the reason) if the provider, the cap or the API host permission is later removed. Settings › Scheduled runs lists them all.
 
 ### Docs
 
@@ -111,13 +122,13 @@ On Google results pages (`serp.js`) results get position badges plus a "Copy res
 
 **View as crawler** (Tools tab, `ua.js`): Googlebot Smartphone/Desktop, Bingbot or GPTBot. A declarativeNetRequest session rule sets the `User-Agent` header for that tab only and reloads it. The popup shows a banner with a "Back to normal" button while it's on, and the rule is dropped when the tab closes. Only the header changes; in-page `navigator.userAgent` stays the real one.
 
-Permissions: `activeTab`, `scripting`, `contextMenus`, `declarativeNetRequestWithHostAccess`, `storage`, `sidePanel`. Site access (`<all_urls>`) is an *optional* permission, requested the first time you pick a crawler view run Bot's eye or Check links. That keeps the install warning-free. Nothing runs until you click the icon, except the SERP scripts on Google.
+Permissions: `activeTab`, `scripting`, `contextMenus`, `declarativeNetRequestWithHostAccess`, `storage`, `unlimitedStorage`, `sidePanel`, `alarms` (scheduled runs). Optional: `webRequest`, `identity`, and each provider's API host, requested when its key is saved. Site access (`<all_urls>`) is an *optional* permission, requested the first time you pick a crawler view run Bot's eye or Check links. That keeps the install warning-free. Nothing runs until you click the icon, except the SERP scripts on Google.
 
-**Not ported:** AITDK traffic/keyword numbers and Open SEO Stats' IP geolocation. Both come from those vendors' private APIs, so they're linked out (SimilarWeb, Semrush, ipinfo) instead.
+**Not ported:** AITDK's traffic and keyword numbers. They come from its private API, so Tools links out to SimilarWeb and Semrush instead (or connect your own provider keys).
 
-Checks: `node sss/test.mjs` (collector, analysis, robots.txt matcher, GEO scoring in jsdom), `node sss/smoke.mjs` (real Chromium: all 17 views, full screen tab and pop-out window, a crawl in full screen, help/privacy pages, the AI path with a stubbed model (firewall drops an invented number), Refract rules in Issues, bot's eye against 403/challenge fixtures, overlays, report download, side-panel layout and per-tab enablement, Googlebot switch, PAA extraction).
+Checks: `npm run check` runs `test.mjs` (collector, analysis, robots.txt matcher, GEO scoring, provider parsers in jsdom), `checks-gsc-links.mjs`, `checks-growth.mjs` (opportunities, fixes) and `checks-schedules.mjs` (due/late/catch-up logic and cap enforcement with a stubbed DataForSEO). `live-check.mjs dataforseo|semrush|ahrefs` checks response shapes against the real APIs with your keys. `smoke.mjs` and `smoke-data.mjs` need `scripts/e2e/harness.mjs` from the parent Refract repo and are run as `node sss/smoke.mjs` there (real Chromium: all 17 views, full screen tab and pop-out window, a crawl in full screen, help/privacy pages, the AI path with a stubbed model (firewall drops an invented number), Refract rules in Issues, bot's eye against 403/challenge fixtures, overlays, report download, side-panel layout and per-tab enablement, Googlebot switch, PAA extraction).
 
-External lookups (Domain view only, on open): dns.google, rdap.org, tranco-list.eu, ipinfo.io, archive.org. Everything else runs in the page.
+Keyless external lookups (Domain view only, on open): dns.google, rdap.org, tranco-list.eu, ipinfo.io, archive.org. Every other outside request goes to a connector you turned on; `privacy.html` lists each one.
 
 ## How the originals were analysed
 

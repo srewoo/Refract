@@ -1,10 +1,10 @@
 // AI visibility: save prompts, run them on AI engines through DataForSEO, and see whether answers mention or cite this
 // domain and its competitors. Kept apart from "AI search" (technical readiness of this page).
 import { registrableDomain, toCsv } from './analyze.js'
-import { ENGINES, addRun, compareRuns, deleteRuns, judge, loadPrompts, loadRuns, runRows, updatePrompts, verdict, visibilityTrend } from './aivis.js'
-import { MARKETS, hasCreds, loadKeys } from './keys.js'
+import { ENGINES, compareRuns, deleteRuns, judge, loadPrompts, loadRuns, runPrompt, runRows, updatePrompts, verdict, visibilityTrend } from './aivis.js'
+import { MARKETS, loadKeys } from './keys.js'
 import { loadCompetitors } from './keywords.js'
-import { API } from './providers.js'
+import { scheduleBlock } from './views-schedule.js'
 import { h, head, block, tag, btn, num, lineChart, download } from './ui.js'
 import { failBox, note } from './views-data.js'
 
@@ -20,20 +20,6 @@ function twoStep(label, ask, run) {
     await run()
   })
   return b
-}
-
-async function runPrompt(domain, prompt) {
-  const cfg = await loadKeys()
-  if (!hasCreds(cfg, 'dataforseo')) throw new Error('AI visibility runs through DataForSEO: connect it in Settings › Connectors.')
-  const [competitors, { brand }] = await Promise.all([loadCompetitors(domain), loadPrompts(domain)])
-  const m = MARKETS[prompt.market] ?? MARKETS[cfg.market]
-  const results = await Promise.all(prompt.engines.map(async (engine) => {
-    try {
-      const a = await API.dataforseo.aiAnswer(cfg.creds.dataforseo, engine, prompt.prompt, m)
-      return { engine, model: a.model ?? null, cost: a.cost ?? null, text: a.text, citations: a.citations, judged: judge(a, { domain, brand, competitors }) }
-    } catch (e) { return { engine, cost: null, judged: judge({ error: e.message ?? String(e) }, { domain }) } } // a failure is never "not mentioned"
-  }))
-  return addRun(domain, prompt.id, { at: new Date().toISOString(), market: prompt.market, results })
 }
 
 // ---------------- Evidence for one prompt ----------------
@@ -110,7 +96,7 @@ function promptTable(domain, data, latest, { select, edit, refresh }) {
         if (running.has(p.id)) return
         running.add(p.id); e.target.disabled = true; e.target.textContent = 'Running… (up to 2 min)'; err.replaceChildren()
         let runs
-        try { runs = await runPrompt(domain, p); await updatePrompts(domain, (s) => { if (s.prompts[p.id]) s.prompts[p.id].lastRun = runs.at(-1).at; return s }) }
+        try { runs = await runPrompt(domain, p) }
         catch (x) { running.delete(p.id); err.replaceChildren(failBox(x)); e.target.disabled = false; e.target.textContent = label; return } // keep Run usable for a retry
         running.delete(p.id) // before the refresh, so the re-rendered Run button is enabled
         select(p.id); await refresh() // re-renders the selected prompt from fresh data
@@ -138,7 +124,7 @@ function trendBlock(runsAll) {
 }
 
 export const AiVisibility = {
-  render(d) {
+  render(d, { go } = {}) {
     const domain = registrableDomain(d.host)
     const brand = h('input', { class: 'url-input', 'aria-label': 'Brand names', placeholder: 'Brand names, comma-separated (e.g. Smile Co, SmileCo)', onchange: (e) => updatePrompts(domain, (s) => ({ ...s, brand: e.target.value.split(',').map((x) => x.trim()).filter(Boolean) })) })
     const rivals = note(''), table = h('div'), detail = h('div'), trend = h('div'), tools = h('div', { class: 'bar-line' })
@@ -159,6 +145,7 @@ export const AiVisibility = {
     }
     refresh()
     return [head('AI visibility', `Whether AI answers mention and cite ${domain} for the prompts you choose. Runs through your DataForSEO account.`),
-      block('Your brand', brand, rivals), addPromptBlock(domain, (id) => { selected = id; refresh() }), block('Prompts', note(OBSERVATION), table, tools), detail, block('Trend', trend)]
+      block('Your brand', brand, rivals), addPromptBlock(domain, (id) => { selected = id; refresh() }), block('Prompts', note(OBSERVATION), table, tools),
+      scheduleBlock(() => ({ id: `ai:${domain}`, kind: 'ai', domain, label: `AI visibility · ${domain} (every saved prompt)` }), { go }), detail, block('Trend', trend)]
   },
 }

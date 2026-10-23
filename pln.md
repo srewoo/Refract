@@ -42,7 +42,9 @@ Independent review fixes: renamed views crashed from issue links (now aliased + 
 
 claude-seo parity pass (2026-10-22): spend ledger + daily caps on every paid call (`ledger.js`, Settings › Spend; the M5 ledger half); retired rich-result list with replacements; merchant-listing Product fields; agent readiness (`agent.js`); Lighthouse via PageSpeed Insights incl. Agentic Browsing, single page + crawl batch; CrUX LCP sub-parts; Moz as a backlinks provider; Open PageRank authority; Cloud Natural Language entities; E-E-A-T signals + invisible-character rule; IndexNow (page + crawl); GA4 organic landing pages (own read-only scope); SERP-overlap clusters; content brief; local geo-grid (DataForSEO Maps); programmatic templates, parasite-SEO risk, sitemap.xml (crawl); domain heritage (Wayback); disavow file; live-link checks; schema templates, hreflang builder, comparison outline, Markdown/JSON audit export. Not built (need a server or an approval an extension can't get): Common Crawl graph files, Google Business Profile API, Indexing API, Google Ads Keyword Planner.
 
-Still open: schedules (M5; the ledger and caps are done); Phase 6 (MCP) out of scope for now.
+Schedules (2026-10-23, M5 done): `schedules.js` + `views-schedule.js`. Rankings trackers and a domain's AI visibility prompts run daily/weekly on a 30-minute `chrome.alarms` tick in the service worker; due runs missed while Chrome was closed run once on startup, marked late with the original due time. Turning one on needs a daily cap for its provider (checked before the host-permission prompt); runs skip with a reason if the provider, cap or host access goes away. Each slot is claimed before it runs, so a killed worker skips rather than repeats paid calls. Settings › Scheduled runs lists all. `checks-schedules.mjs` covers it.
+
+Still open: Phase 6 (MCP), out of scope for now.
 
 ## Current state (baseline)
 

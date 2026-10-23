@@ -59,7 +59,8 @@
     for (const a of box.querySelectorAll('a[href]')) {
       const u = realUrl(a)
       if (u) add(norm(host(u).split('.')[0]), host(u), host(u))
-      else if (a.getAttribute('aria-label')) { const name = a.getAttribute('aria-label').trim(); add(norm(name.split('·')[0]), name, '') }
+      // Only Google's redirect links name a source; its own UI links ("Go to Google Home") are not sites.
+      else if (a.getAttribute('aria-label') && /\/(url|goto)\?/.test(a.getAttribute('href'))) { const name = a.getAttribute('aria-label').trim(); add(norm(name.split('·')[0]), name, '') }
     }
     const want = norm(domain.split('.')[0])
     const sources = [...byKey.entries()]

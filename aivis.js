@@ -2,7 +2,9 @@
 // A result is an observation of one prompt on one engine, configuration and time — never an estimate of all AI traffic.
 // Storage: `aiprompts:<domain>` = { brand: [aliases], prompts: { [id]: prompt } };
 //          `airuns:<domain>:<id>` = runs, newest last (RUN_KEEP kept; answer text capped at TEXT_CAP chars).
-import { clean } from './keywords.js'
+import { clean, loadCompetitors } from './keywords.js'
+import { MARKETS, hasCreds, loadKeys } from './keys.js'
+import { API } from './providers.js'
 
 // ponytail: est. is the DataForSEO task fee plus a typical model charge; the real cost of each run is stored with it.
 export const ENGINES = {
@@ -88,3 +90,20 @@ export function visibilityTrend(runs) {
 export const runRows = (prompt, runs) => runs.flatMap((run) => run.results.map((r) => ({ prompt: prompt.prompt, topic: prompt.topic, engine: ENGINES[r.engine]?.name ?? r.engine, model: r.model ?? '', market: run.market, run_at: run.at,
   result: verdict(r.judged)[1], mentioned: r.judged.mentioned ?? '', cited: r.judged.cited ?? '', cited_urls: (r.judged.citedUrls ?? []).join(' '),
   competitors_cited: (r.judged.competitors ?? []).filter((c) => c.cited).map((c) => c.domain).join(' '), cost: r.cost ?? '', error: r.judged.error ?? '' })))
+
+/** Run one saved prompt on its engines and store the run. Used by the AI visibility view and scheduled runs. */
+export async function runPrompt(domain, prompt) {
+  const cfg = await loadKeys()
+  if (!hasCreds(cfg, 'dataforseo')) throw new Error('AI visibility runs through DataForSEO: connect it in Settings › Connectors.')
+  const [competitors, { brand }] = await Promise.all([loadCompetitors(domain), loadPrompts(domain)])
+  const m = MARKETS[prompt.market] ?? MARKETS[cfg.market]
+  const results = await Promise.all(prompt.engines.map(async (engine) => {
+    try {
+      const a = await API.dataforseo.aiAnswer(cfg.creds.dataforseo, engine, prompt.prompt, m)
+      return { engine, model: a.model ?? null, cost: a.cost ?? null, text: a.text, citations: a.citations, judged: judge(a, { domain, brand, competitors }) }
+    } catch (e) { return { engine, cost: null, judged: judge({ error: e.message ?? String(e) }, { domain }) } } // a failure is never "not mentioned"
+  }))
+  const runs = await addRun(domain, prompt.id, { at: new Date().toISOString(), market: prompt.market, results })
+  await updatePrompts(domain, (s) => { if (s.prompts[prompt.id]) s.prompts[prompt.id].lastRun = runs.at(-1).at; return s })
+  return runs
+}

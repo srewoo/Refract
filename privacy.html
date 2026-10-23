@@ -11,7 +11,7 @@
   <header>
     <img src="icons/icon-48.png" alt="" width="40" height="40" class="logo">
     <h1>Privacy policy</h1>
-    <p>Refract SEO Chrome extension · Effective 14 October 2026 (updated for data sources, Search Console and Bing)</p>
+    <p>Refract SEO Chrome extension · Effective 23 October 2026 (updated for scheduled runs)</p>
   </header>
 
   <p><strong>Short version:</strong> Refract SEO has no account, no server and no analytics. It reads a page only when you open it on that page. Results stay in your browser. A few optional features contact public services, listed below with exactly what each one receives.</p>
@@ -33,7 +33,7 @@
     <tr><td>Google Search Console sign-in</td><td>Chrome's own identity token cache (Refract SEO does not store the token)</td><td>Until you press Disconnect, which also revokes it at Google</td></tr>
     <tr><td>Page snapshots for History (title, description, canonical, robots, counts, scores, issue list), up to 50 per URL and 300 URLs</td><td><code>chrome.storage.local</code> on this computer</td><td>Oldest dropped automatically; removed with Refract SEO</td></tr>
     <tr><td>Google searches seen with your domain set (query, AI Overview sources, your position), last 300; Compare’s phrase gaps per page</td><td><code>chrome.storage.local</code> on this computer</td><td>Oldest searches dropped automatically; removed with Refract SEO</td></tr>
-    <tr><td>Tracked keywords and rank history (per market and device); last backlink result per domain; saved keywords with your tags, notes and target URLs; competitor domains, keyword comparisons and domain overviews; backlink summaries (newest 30 per domain), the last loaded backlinks and your outreach prospects; AI visibility prompts and their last 20 runs, including answer text (up to 6,000 characters each)</td><td><code>chrome.storage.local</code> on this computer</td><td>Until removed with Refract SEO</td></tr>
+    <tr><td>Tracked keywords and rank history (per market and device); last backlink result per domain; saved keywords with your tags, notes and target URLs; competitor domains, keyword comparisons and domain overviews; backlink summaries (newest 30 per domain), the last loaded backlinks and your outreach prospects; AI visibility prompts and their last 20 runs, including answer text (up to 6,000 characters each); the schedules you turn on, with each one's next due time and last result</td><td><code>chrome.storage.local</code> on this computer</td><td>Until removed with Refract SEO</td></tr>
     <tr><td>Spend ledger: each paid or quota'd provider request (provider, request type, time, cost when the provider reports it, success or error), and your daily caps; latest Lighthouse result per page; latest geo-grid per keyword; latest authority check; the GA4 property you picked per domain</td><td><code>chrome.storage.local</code> on this computer</td><td>Newest 2,000 ledger entries kept; the rest until removed with Refract SEO</td></tr>
     <tr><td>"View as crawler" setting for a tab</td><td>Browser session memory</td><td>Until you switch back, close the tab or restart Chrome</td></tr>
   </table>
@@ -54,7 +54,7 @@
     <tr><td>Alt-text suggestion</td><td>The website you are auditing</td><td>One request for that image file, without your cookies, so the on-device model can look at it</td></tr>
     <tr><td>Field data (Speed)</td><td><code>chromeuxreport.googleapis.com</code> (Google)</td><td>Your CrUX API key and the page URL and its origin</td></tr>
     <tr><td>Rankings, keyword data, backlinks (only with your key)</td><td>The provider you chose: <code>api.dataforseo.com</code>, <code>api.semrush.com</code> or <code>api.ahrefs.com</code></td><td>Your key, plus the domain, the keywords you track, the page's top phrases, the seed keywords you research, or the competitor domains you compare or look up backlinks for, and your market. Billed to your account by the provider.</td></tr>
-    <tr><td>AI visibility (only with your DataForSEO login)</td><td><code>api.dataforseo.com</code>, which forwards each prompt to the engines you pick: Google (AI Overview, AI Mode), OpenAI (ChatGPT) or Perplexity</td><td>The prompt text and your market, only when you press Run. Your brand names and competitors are not sent; answers are checked for them on this computer.</td></tr>
+    <tr><td>AI visibility (only with your DataForSEO login)</td><td><code>api.dataforseo.com</code>, which forwards each prompt to the engines you pick: Google (AI Overview, AI Mode), OpenAI (ChatGPT) or Perplexity</td><td>The prompt text and your market, only when you press Run or on a schedule you turn on. Your brand names and competitors are not sent; answers are checked for them on this computer.</td></tr>
     <tr><td>Search Console</td><td>Google (<code>accounts.google.com</code>, <code>www.googleapis.com</code>, <code>searchconsole.googleapis.com</code>)</td><td>Sign-in through Chrome with Refract SEO's Google OAuth client (read-only scope); then the list of properties you can see, the page URL for its performance data, and, when you press Inspect, the URL for URL Inspection.</td></tr>
     <tr><td>Bing Webmaster</td><td><code>ssl.bing.com</code></td><td>Your Bing API key and the page URL</td></tr>
     <tr><td>Redirects &amp; headers</td><td>The URL you enter</td><td>One request per hop, without your cookies</td></tr>
@@ -84,6 +84,7 @@
     <tr><td><code>declarativeNetRequestWithHostAccess</code></td><td>Set a crawler User-Agent for "View as crawler" and Bot's eye. Rules are temporary and limited to the URL or tab involved.</td></tr>
     <tr><td><code>storage</code></td><td>Settings and the last crawl per site, as listed above.</td></tr>
     <tr><td><code>sidePanel</code></td><td>Open Refract SEO as a side panel for one tab when you ask.</td></tr>
+    <tr><td><code>alarms</code></td><td>Wake Refract SEO every 30 minutes to run rank checks and AI visibility prompts you scheduled. Nothing runs unless you turn a schedule on.</td></tr>
     <tr><td><code>unlimitedStorage</code></td><td>Crawls of up to 1,000 pages and History snapshots can exceed Chrome's default extension storage.</td></tr>
     <tr><td><code>webRequest</code> (optional)</td><td>Requested only when you first trace a redirect chain, to read each hop's status and headers of Refract SEO's own request.</td></tr>
     <tr><td><code>identity</code> (optional)</td><td>Requested only when you connect Search Console, so Chrome can sign you in with Google.</td></tr>
@@ -96,7 +97,7 @@
     <li>No analytics, telemetry, tracking pixels or crash reporting.</li>
     <li>No selling, sharing or transferring of data to third parties beyond the requests listed above.</li>
     <li>No remote code: everything Refract SEO runs ships inside the extension.</li>
-    <li>No paid request runs unless you press its button, and none runs once you reach a daily cap you set in Settings › Spend.</li>
+    <li>No paid request runs unless you press its button or turn on a schedule for it. A schedule can only be turned on once you have set a daily cap for its provider, and no paid request runs once you reach a daily cap you set in Settings › Spend.</li>
     <li>No use of data for advertising, credit or lending decisions.</li>
   </ul>
 

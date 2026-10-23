@@ -2,6 +2,7 @@
 import { linkStats, registrableDomain, toCsv, toolLinks } from './analyze.js'
 import { backupBlock } from './views-backup.js'
 import { spendBlock } from './views-spend.js'
+import { schedulesList } from './views-schedule.js'
 import { heritageBlock, hreflangBuilder, schemaTemplatesBlock } from './views-tools.js'
 import { imageFormats, schemaTree, topDomains } from './geo.js'
 import { overlayBtn } from './views-page.js'
@@ -257,7 +258,7 @@ export const Settings = {
         h('label', { class: 'setting' }, h('span', {}, h('b', {}, 'Open on'), h('span', { class: 'muted small' }, 'First view when the popup opens.')),
           h('select', { onchange: (e) => save('startView', e.target.value) }, views.map((v) => h('option', { value: v, selected: v === viewName(cfg.startView) }, v)))))
     })
-    return [head('Settings', 'Preferences sync with your Chrome profile; API keys stay on this computer.'), out, connectorsPanel(), spendBlock(), backupBlock(), h('p', { class: 'muted small' }, h('a', { href: 'help.html', target: '_blank' }, 'Help'), ' · ', h('a', { href: 'privacy.html', target: '_blank' }, 'Privacy policy'))]
+    return [head('Settings', 'Preferences sync with your Chrome profile; API keys stay on this computer.'), out, connectorsPanel(), spendBlock(), schedulesList(), backupBlock(), h('p', { class: 'muted small' }, h('a', { href: 'help.html', target: '_blank' }, 'Help'), ' · ', h('a', { href: 'privacy.html', target: '_blank' }, 'Privacy policy'))]
   },
 }
 

@@ -25,7 +25,8 @@
     "declarativeNetRequestWithHostAccess",
     "storage",
     "unlimitedStorage",
-    "sidePanel"
+    "sidePanel",
+    "alarms"
   ],
   "optional_permissions": [
     "webRequest",

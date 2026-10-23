@@ -2,6 +2,7 @@
 import { registrableDomain } from './analyze.js'
 import { highlightNofollow } from './page-actions.js'
 import { LENS_RULE_BASE } from './lens.js'
+import { TICK_MINUTES, runDue } from './schedules.js'
 
 const SITE = {
   ahrefs: ['Ahrefs', (d) => `https://ahrefs.com/backlink-checker/?input=${d}`],
@@ -51,3 +52,9 @@ chrome.declarativeNetRequest.getSessionRules().then((rules) => {
   const stale = rules.filter((r) => r.id >= LENS_RULE_BASE).map((r) => r.id)
   if (stale.length) chrome.declarativeNetRequest.updateSessionRules({ removeRuleIds: stale })
 })
+
+// Scheduled rank checks and AI visibility runs (schedules.js). Alarms may not survive a browser restart, so the
+// tick is (re)created at every worker start, and due runs that were missed while Chrome was closed run on startup.
+chrome.alarms.get('schedules').then((a) => a || chrome.alarms.create('schedules', { periodInMinutes: TICK_MINUTES }))
+chrome.alarms.onAlarm.addListener((a) => { if (a.name === 'schedules') runDue() })
+chrome.runtime.onStartup.addListener(() => runDue())

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 const EXT = process.argv[2] ?? '.'
 const SERP = `<!doctype html><html><body style="margin:0"><div id="rcnt"><div id="search">
 <div id="tads" style="height:200px"><a href="https://ad.example/"><h3>Ad title</h3></a></div>
-<div><h2>AI Overview</h2><p style="height:300px">Answer <a href="https://b.com/guide">b.com</a> <span hidden><a href="https://www.wiki.org/x">wiki</a></span> <a href="https://www.google.com/goto?url=CAESx" aria-label="Search Engine Land"></a> <a href="https://www.google.com/x">g</a></p></div>
+<div><h2>AI Overview</h2><p style="height:300px">Answer <a href="https://b.com/guide">b.com</a> <span hidden><a href="https://www.wiki.org/x">wiki</a></span> <a href="https://www.google.com/goto?url=CAESx" aria-label="Search Engine Land"></a> <a href="https://www.google.com/x">g</a> <a href="/webhp?hl=en" aria-label="Go to Google Home"></a></p></div>
 <div><div role="heading">People also ask</div><div style="height:250px"></div></div>
 <a href="https://a.com/"><h3>First result</h3></a><div style="height:120px"></div>
 <a href="https://www.b.com/page"><h3>Second result</h3></a><div style="height:120px"></div>
