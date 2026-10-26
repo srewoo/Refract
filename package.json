@@ -1,6 +1,6 @@
 {
   "name": "refract-seo",
-  "version": "3.5",
+  "version": "3.6",
   "private": true,
   "description": "Refract SEO Chrome extension. No build step: the folder loads unpacked as-is; `npm run build` makes the Web Store zip.",
   "type": "module",
