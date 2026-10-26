@@ -1,9 +1,10 @@
-// Content › trust signals (E-E-A-T) and entity analysis with Google Cloud Natural Language (your key; sends page text
-// only when you press the button).
+// Content › content score for a target keyword, trust signals (E-E-A-T) and entity analysis with Google Cloud Natural
+// Language (your key; sends page text only when you press the button).
 import { analyseText } from './apis.js'
-import { eeatSignals } from './geo.js'
+import { contentScore } from './content-score.js'
+import { band, eeatSignals } from './geo.js'
 import { hasCreds, loadKeys } from './keys.js'
-import { h, block, btn, tag, bars } from './ui.js'
+import { h, block, btn, tag, bars, ring } from './ui.js'
 import { failBox, note } from './views-data.js'
 
 export function trustBlock(d) {
@@ -29,4 +30,30 @@ export function entitiesBlock(d, { go }) {
     } catch (x) { out.replaceChildren(failBox(x)) } finally { e.target.disabled = false }
   })
   return block('Entities · Google Cloud Natural Language', h('div', { class: 'bar-line' }, run, note('Sends up to 20,000 characters of this page’s text to Google, only when pressed.')), out)
+}
+
+/** Score this page against a keyword and the questions searchers ask; both are saved per URL. */
+export function contentScoreBlock(d) {
+  const key = `cscore:${d.url.replace(/#.*/, '')}`
+  const kw = h('input', { class: 'url-input', placeholder: 'Target keyword, e.g. crm for startups', 'aria-label': 'Target keyword' })
+  const qs = h('textarea', { rows: 3, class: 'kw-input', 'aria-label': 'Questions to answer, one per line', placeholder: 'Questions searchers ask, one per line (on Google: Extract People Also Ask)' })
+  const out = h('div')
+  const draw = () => {
+    if (!kw.value.trim()) { out.replaceChildren(note('Enter the keyword this page should rank for.')); return }
+    const r = contentScore(d, kw.value, qs.value.split('\n'))
+    const b = band(r.score)
+    out.replaceChildren(
+      h('div', { class: 'split' },
+        h('div', { class: 'score-card' }, ring(r.score, b.status, { label: 'Content score' }), h('div', {}, h('div', { class: 'grade' }, `Grade ${b.grade}`), h('div', { class: 'muted' }, `average of ${r.dims.length} dimensions`))),
+        bars(r.dims.map((x) => ({ label: x.name, value: x.score })), { fmt: (v) => `${v}` })),
+      ...r.dims.map((x) => {
+        const isQ = x.name === 'Questions answered'
+        return h('div', {}, h('h3', {}, isQ ? `${x.name} · ${x.checks.filter((c) => c.ok).length} of ${x.checks.length}` : `${x.name} · ${x.score}`),
+          h('ul', { class: 'checks' }, x.checks.map((c) => h('li', {}, tag(c.ok ? 'good' : 'warn', isQ ? (c.ok ? 'Covered' : 'Not yet') : c.ok ? 'Pass' : 'Miss'), c.label, c.ok ? '' : h('span', { class: 'muted small' }, ` — ${c.fix}`)))))
+      }))
+  }
+  const run = btn('Score', async () => { draw(); if (kw.value.trim()) await chrome.storage.local.set({ [key]: { keyword: kw.value.trim(), questions: qs.value } }) })
+  chrome.storage.local.get(key).then((v) => { if (v[key]) { kw.value = v[key].keyword; qs.value = v[key].questions ?? ''; draw() } })
+  return block('Content score', h('div', { class: 'bar-line' }, kw, run), qs, out,
+    note('Keyword coverage, readability (Flesch, English pages), structure and questions answered. A question counts as covered when a heading or paragraph uses most of its words.'))
 }

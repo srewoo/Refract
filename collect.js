@@ -169,6 +169,11 @@ globalThis.__sssCollect = async (doc, loc) => {
     wordCount: words.length,
     // Zero-width and bidi control characters: invisible in the page, left behind by AI tools and copy-paste pipelines.
     hiddenChars: (bodyText.match(/[\u200B-\u200D\u2060\uFEFF\u202A-\u202E\u2066-\u2069]/g) ?? []).length,
+    // Body paragraphs (not nav/header/footer/aside) for the answer-first, sourced-claim and readability checks.
+    paras: $$('p').filter((p) => !p.closest('nav,header,footer,aside')).map((p) => ({
+      text: (p.textContent ?? '').replace(/\s+/g, ' ').trim().slice(0, 1500),
+      cited: [...p.querySelectorAll('a[href]')].some((a) => { const u = abs(a.getAttribute('href')); return !!u && /^https?:$/.test(u.protocol) && u.hostname !== loc.hostname }),
+    })).filter((p) => p.text.split(' ').length >= 5).slice(0, 200),
     bodyText: bodyText.slice(0, 20000), // for on-request entity analysis (Content › Natural Language)
     robotsTxt,
     llmsTxt,

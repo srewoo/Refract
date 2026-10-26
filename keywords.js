@@ -119,7 +119,7 @@ export function serpClusters(list, minShared = 3) {
 
 // ---------------- Backup / restore ----------------
 // Research data only: never API keys (the `byok` record), Search Console tokens (Chrome holds them) or page history.
-export const BACKUP_PREFIXES = ['kw:', 'competitors:', 'domgap:', 'domov:', 'ranks:', 'bl:', 'blsnap:', 'bllinks:', 'prospects:', 'aiprompts:', 'airuns:', 'gaps:']
+export const BACKUP_PREFIXES = ['kw:', 'competitors:', 'domgap:', 'domov:', 'ranks:', 'bl:', 'blsnap:', 'bllinks:', 'prospects:', 'aiprompts:', 'airuns:', 'gaps:', 'cscore:']
 const isResearch = (k) => BACKUP_PREFIXES.some((p) => k.startsWith(p))
 export const BACKUP_FORMAT = 'refract-seo-research', BACKUP_VERSION = 1
 export const buildBackup = (all, at = new Date().toISOString()) => ({ format: BACKUP_FORMAT, version: BACKUP_VERSION, exported: at, data: Object.fromEntries(Object.entries(all).filter(([k]) => isResearch(k))) })
@@ -137,7 +137,7 @@ const cleanSaved = (v) => Object.fromEntries(Object.values(v).filter((r) => type
 /** Domain each research key belongs to ("kw:example.com" → example.com; "gaps:<url>" → its host). */
 export function keyDomain(k) {
   const rest = k.slice(k.indexOf(':') + 1)
-  if (k.startsWith('gaps:')) { try { return new URL(rest).hostname.replace(/^www\./, '') } catch { return null } }
+  if (k.startsWith('gaps:') || k.startsWith('cscore:')) { try { return new URL(rest).hostname.replace(/^www\./, '') } catch { return null } }
   return rest.split(':')[0]
 }
 

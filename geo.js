@@ -2,6 +2,7 @@
 import { issues, robotsAllows } from './analyze.js'
 import { rules } from './rules.js'
 import { localIssues } from './local.js'
+import { answerFirst, unsourcedClaims } from './content-score.js'
 export { robotsAllows }
 
 export const AI_BOTS = ['GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot', 'PerplexityBot', 'Google-Extended', 'CCBot', 'Applebot-Extended']
@@ -15,6 +16,7 @@ export function geo(d) {
   const ssrRatio = d.rawTextChars == null || !d.renderedTextChars ? null : Math.min(1, d.rawTextChars / d.renderedTextChars)
   const types = d.schema.types
   const check = (ok, label) => ({ ok, label })
+  const af = answerFirst(d.paras), claims = unsourcedClaims(d.paras)
   const pillar = (name, checks) => ({ name, checks, score: pct((checks.filter((c) => c.ok).length / checks.length) * 100) })
   const pillars = [
     pillar('AI crawler access', [
@@ -39,6 +41,8 @@ export function geo(d) {
       check(d.structure.lists + d.structure.tables > 0, `${d.structure.lists} lists, ${d.structure.tables} tables`),
       check(d.structure.questionHeadings > 0, `${d.structure.questionHeadings} question-style headings`),
       check(!!d.description, 'Has meta description'),
+      check(af.ok, af.words ? `Opens with a ${af.words}-word paragraph (≤ 60 leads with the answer)` : 'No body paragraph to quote'),
+      check(claims.length === 0, claims.length ? `${claims.length} claim${claims.length > 1 ? 's' : ''} with numbers link no source` : 'Claims with numbers link a source'),
     ]),
     pillar('Trust (E-E-A-T)', [
       check(!!d.author || types.includes('Person'), d.author ? `Author: ${d.author}` : 'Author named'),

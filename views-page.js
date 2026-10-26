@@ -9,7 +9,7 @@ import { buildReport } from './report.js'
 import { stack, SERP_TITLE_PX } from './rules.js'
 import { evaluateAgent, probeAgent } from './agent.js'
 import { lighthouseBlock } from './views-lighthouse.js'
-import { entitiesBlock, trustBlock } from './views-content-extra.js'
+import { contentScoreBlock, entitiesBlock, trustBlock } from './views-content-extra.js'
 import { auditJson, auditMarkdown } from './generators.js'
 import { h, head, block, kv, tag, btn, ext, ms, num, ring, lengthMeter, bars, timeline, tree, chain, copyBtn, download } from './ui.js'
 
@@ -110,6 +110,7 @@ export const Content = {
       h('div', { class: 'split' },
         block(`Bold / strong (${d.emphasis.strong.length})`, d.emphasis.strong.length ? h('ul', { class: 'chips' }, d.emphasis.strong.map((t) => h('li', {}, t))) : h('p', { class: 'muted' }, 'None')),
         block(`Italic / em (${d.emphasis.em.length})`, d.emphasis.em.length ? h('ul', { class: 'chips' }, d.emphasis.em.map((t) => h('li', {}, t))) : h('p', { class: 'muted' }, 'None'))),
+      contentScoreBlock(d),
       trustBlock(d),
       entitiesBlock(d, ctx),
     ]

@@ -15,6 +15,7 @@ import { serpClusters } from './keywords.js'
 import { linkPresent } from './links.js'
 import { gridPoints } from './local.js'
 import { eeatSignals } from './geo.js'
+import { contentScore, answerFirst, unsourcedClaims, readingEase } from './content-score.js'
 import { classify } from './lens.js'
 import { crawl, analyseCrawl, normalise, sitemapUrls } from './crawl.js'
 import { checkNumbers, sanitise, aiStatus } from './ai.js'
@@ -103,6 +104,26 @@ const g = geo({ ...d, robotsTxt: robots, llmsTxt: false, rawTextChars: 50, rende
 assert.equal(g.bots.find((b) => b.name === 'GPTBot').allowed, false)
 assert.equal(g.ssrRatio, 0.5)
 assert.ok(g.score > 0 && g.score < 100)
+// ---- content score + answer-engine checks
+assert.equal(d.paras.length, 1, 'collector keeps body paragraphs')
+assert.equal(d.paras[0].cited, false)
+assert.deepEqual(answerFirst(d.paras), { ok: true, words: 12 })
+assert.deepEqual(answerFirst([]), { ok: false, words: 0 })
+assert.deepEqual(unsourcedClaims([{ text: 'We grew 40% last year. Shoes are nice.', cited: false }, { text: 'A survey found 3 in 4 runners agree.', cited: true }]), ['We grew 40% last year.'])
+assert.equal(unsourcedClaims([{ text: 'Founded in 2019 by runners.', cited: false }]).length, 0, 'a bare year is not a claim')
+assert.ok(g.pillars.find((p) => p.name === 'Content & citability').checks.some((c) => /Opens with a 12-word/.test(c.label)))
+assert.equal(readingEase(d.paras, 'en'), null, 'too little text to judge')
+assert.equal(readingEase([{ text: 'The cat sat on the mat. '.repeat(10) }], 'de'), null, 'English only')
+assert.ok(readingEase([{ text: 'The cat sat on the mat. '.repeat(10) }], 'en').ease > 90)
+const cs = contentScore(d, 'running shoes', ['Are trail running shoes good on road?', 'How much do running shoes cost?'])
+const cov = cs.dims.find((x) => x.name === 'Keyword coverage').checks
+assert.deepEqual(cov.map((c) => c.ok), [true, true, false, true, false, false], 'title, H1 and lead hit; description, H2 and URL (/shoes) miss')
+assert.deepEqual(cs.dims.find((x) => x.name === 'Questions answered').checks.map((c) => c.ok), [true, false])
+assert.deepEqual(cs.dims.map((x) => x.name), ['Keyword coverage', 'Structure', 'Questions answered'], 'readability skipped on thin text')
+assert.equal(cs.score, Math.round(cs.dims.reduce((n, x) => n + x.score, 0) / cs.dims.length))
+assert.equal(contentScore(d, 'running shoes').dims.length, 2, 'no questions, no questions dimension')
+const longPara = { ...d, paras: [{ text: 'The cat sat on the mat. '.repeat(30), cited: false }] }
+assert.equal(contentScore(longPara, 'cat').dims.find((x) => x.name === 'Readability').score, 84, 'easy text, one failed check (long paragraph) → (100 + 67) / 2, rounded')
 const hl = health(d)
 assert.equal(hl.list[0].level, 'bad', 'critical issues sort first')
 assert.ok(hl.list.every((i) => i.section), 'every issue names its section')
