@@ -11,7 +11,7 @@
   <header>
     <img src="icons/icon-48.png" alt="" width="40" height="40" class="logo">
     <h1>Privacy policy</h1>
-    <p>Refract SEO Chrome extension · Effective 23 October 2026 (updated for scheduled runs)</p>
+    <p>Refract SEO Chrome extension · Effective 27 October 2026 (added Google user data protection)</p>
   </header>
 
   <p><strong>Short version:</strong> Refract SEO has no account, no server and no analytics. It reads a page only when you open it on that page. Results stay in your browser. A few optional features contact public services, listed below with exactly what each one receives.</p>
@@ -75,6 +75,26 @@
 
   <h2>Chrome built-in AI</h2>
   <p>AI suggestions use Gemini Nano, which runs <strong>on your device</strong>. Page text, headings and image files given to the model never leave your computer and are not sent to Refract SEO or to Google by Refract SEO. Suggestions are checked by Refract SEO before they are shown, and any suggestion that states a number not found on the page is discarded.</p>
+
+  <h2>Google user data and how it is protected</h2>
+  <p>If you connect Google Search Console or Google Analytics 4, Refract SEO accesses Google user data through these read-only scopes only:</p>
+  <ul>
+    <li><code>https://www.googleapis.com/auth/webmasters.readonly</code>: the Search Console properties you can see, search performance for the page you are auditing, and URL Inspection results when you press Inspect.</li>
+    <li><code>https://www.googleapis.com/auth/analytics.readonly</code>: the GA4 properties you can see and Organic Search landing-page reports for the property you pick.</li>
+  </ul>
+  <p>Refract SEO cannot change anything in your Google accounts. It uses this data only to show it to you inside the extension.</p>
+  <p>We protect this data with the following safeguards:</p>
+  <ul>
+    <li><strong>Encryption in transit:</strong> every request to Google APIs uses HTTPS (TLS). Refract SEO never sends Google data over an unencrypted connection.</li>
+    <li><strong>No server, no copies:</strong> Refract SEO has no backend. Google data goes directly from Google's servers to your browser and is never sent to, stored on, or viewable by the developer or any third party.</li>
+    <li><strong>No storage of Google data:</strong> Search Console and Analytics results are held in memory only while you view them and are discarded when you close the view. The only GA4-related value saved is the property ID you picked per domain, in <code>chrome.storage.local</code> on your computer.</li>
+    <li><strong>Token handling:</strong> sign-in uses Chrome's built-in identity API. OAuth access tokens are held in Chrome's own protected token cache; Refract SEO never writes them to storage, logs them, or sends them anywhere except Google's API endpoints, in the <code>Authorization</code> header. Requests are made without browser cookies.</li>
+    <li><strong>Revocation:</strong> pressing Disconnect removes the cached token and revokes it at Google (<code>oauth2.googleapis.com/revoke</code>). You can also revoke access at any time at <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>.</li>
+    <li><strong>Least privilege:</strong> only read-only scopes are requested, and only when you choose to connect.</li>
+    <li><strong>Local protection:</strong> anything Refract SEO stores on your computer is protected by Chrome's extension storage isolation (no other website or extension can read it) and by your operating system account.</li>
+    <li><strong>Deletion:</strong> removing Refract SEO deletes all its local data.</li>
+  </ul>
+  <p><strong>Limited Use.</strong> Refract SEO's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements. Google user data is not transferred to anyone, not used for advertising, not sold, not read by humans, and not used to develop, improve or train any AI or machine-learning models, generalised or otherwise.</p>
 
   <h2>Permissions and why</h2>
   <div class="scroll-x"><table>
