@@ -9,7 +9,8 @@
   "oauth2": {
     "client_id": "238611989419-ume5a733mcfaur2v9m8hn7vgpmg5g7tf.apps.googleusercontent.com",
     "scopes": [
-      "https://www.googleapis.com/auth/webmasters.readonly"
+      "https://www.googleapis.com/auth/webmasters.readonly",
+      "https://www.googleapis.com/auth/analytics.readonly"
     ]
   },
   "icons": {
